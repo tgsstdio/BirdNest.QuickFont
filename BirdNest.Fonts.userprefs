@@ -1,0 +1,15 @@
+﻿<Properties StartupItem="Example\Example.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Example\Game.cs">
+    <Files>
+      <File FileName="Example\Game.cs" Line="240" Column="30" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <DisabledProjects>
+    <String>Q2\QuickFont\QuickFont.csproj</String>
+  </DisabledProjects>
+</Properties>
