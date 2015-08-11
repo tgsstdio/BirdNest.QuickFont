@@ -12,7 +12,7 @@ namespace QuickFont
     /// Class for building a Quick Font, given a Font
     /// and a configuration object.
     /// </summary>
-    class Builder
+    public class Builder
     {
 
         private string charSet;
@@ -488,11 +488,13 @@ namespace QuickFont
             return BuildFontData(null);
         }
 
+		const string SUPERSAMPLE_LEVELS_MUST_BE_A_POWER_OF_TWO_ERROR = "SuperSampleLevels must be a power of two when using ForcePowerOfTwo.";
+
         public QFontData BuildFontData(string saveName)
         {
             if (config.ForcePowerOfTwo && config.SuperSampleLevels != PowerOfTwo(config.SuperSampleLevels))
             {
-                throw new ArgumentOutOfRangeException("SuperSampleLevels must be a power of two when using ForcePowerOfTwo.");
+				throw new ArgumentOutOfRangeException (SUPERSAMPLE_LEVELS_MUST_BE_A_POWER_OF_TWO_ERROR);
             }
 
             if (config.SuperSampleLevels <= 0 || config.SuperSampleLevels > 8)
@@ -599,8 +601,8 @@ namespace QuickFont
             var bitmapSheets = GenerateBitmapSheetsAndRepack(sourceFontGlyphs, sourceBitmapData.ToArray(), shadowConfig.PageWidth, shadowConfig.PageHeight, out newGlyphs, shadowConfig.GlyphMargin + shadowConfig.blurRadius*3, shadowConfig.ForcePowerOfTwo);
 
             //scale up in case we wanted bigger/smaller shadows
-            if (shadowConfig.Scale != 1.0f)
-                ScaleSheetsAndGlyphs(bitmapSheets, newGlyphs, shadowConfig.Scale); //no point in retargeting yet, since we will do it after blur
+			if (Math.Abs (shadowConfig.Scale - 1.0f) > float.Epsilon)
+				ScaleSheetsAndGlyphs (bitmapSheets, newGlyphs, shadowConfig.Scale); //no point in retargeting yet, since we will do it after blur
 
 
             //blacken and blur
@@ -794,18 +796,18 @@ namespace QuickFont
                 data.Pages[i] = new TexturePage(bitmapPages[i].bitmapData);
 
 
-            if (downSampleFactor != 1.0f)
-            {
-                foreach (var glyph in data.CharSetMapping.Values)
-                    RetargetGlyphRectangleOutwards(bitmapPages[glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
+			if (Math.Abs (downSampleFactor - 1.0f) > float.Epsilon)
+			{
+				foreach (var glyph in data.CharSetMapping.Values)
+					RetargetGlyphRectangleOutwards (bitmapPages [glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
  
 
-                intercept = FirstIntercept(data.CharSetMapping);
-                if (intercept != null)
-                {
-                    throw new Exception("Failed to load font from file. Glyphs '" + intercept[0] + "' and '" + intercept[1] + "' were overlapping. This occurred only after resizing your texture font, implying that there is a bug in QFont. ");
-                }
-            }
+				intercept = FirstIntercept (data.CharSetMapping);
+				if (intercept != null)
+				{
+					throw new Exception ("Failed to load font from file. Glyphs '" + intercept [0] + "' and '" + intercept [1] + "' were overlapping. This occurred only after resizing your texture font, implying that there is a bug in QFont. ");
+				}
+			}
 
 
 

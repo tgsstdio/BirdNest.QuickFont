@@ -5,7 +5,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace QuickFont
 {
-    class TexturePage : IDisposable
+    public class TexturePage : IDisposable
     {
         int gLTexID;
         int width;

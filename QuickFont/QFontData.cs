@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace QuickFont
 {
-    class QFontData
+    public class QFontData
     {
 
         /// <summary>

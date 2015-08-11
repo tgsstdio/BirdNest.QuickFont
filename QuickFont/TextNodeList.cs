@@ -6,9 +6,9 @@ namespace QuickFont
 {
 
 
-    enum TextNodeType { Word, LineBreak, Space }
+    public enum TextNodeType { Word, LineBreak, Space }
 
-    class TextNode
+    public class TextNode
     {
         public TextNodeType Type;
         public string Text;

@@ -31,6 +31,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="OpenTK">
+      <HintPath>..\packages\OpenTK.1.1.1589.5942\lib\NET40\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -58,11 +62,16 @@
     <None Include="Fonts\times.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuickFont\QuickFont.csproj">
       <Project>{BBECE6FC-EF63-40F8-A734-A500D1DFC1AF}</Project>
       <Name>QuickFont</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NextFont\NextFont.csproj">
+      <Project>{4C13365F-22BC-4ED0-BA44-5F7DF3E4E5CF}</Project>
+      <Name>NextFont</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
