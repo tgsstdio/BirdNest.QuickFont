@@ -4,8 +4,6 @@ using System.Collections;
 
 namespace QuickFont
 {
-
-
     public enum TextNodeType { Word, LineBreak, Space }
 
     public class TextNode
@@ -35,18 +33,20 @@ namespace QuickFont
     /// Class to hide TextNodeList and related classes from 
     /// user whilst allowing a textNodeList to be passed around.
     /// </summary>
-    public class ProcessedText
+    public class ProcessedText<TFont>
+		where TFont : class
     {
-        internal TextNodeList textNodeList;
-		internal float maxWidth;
-        internal QFontAlignment alignment;
+		public TextNodeList<TFont> textNodeList;
+		public float maxWidth;
+		public QFontAlignment alignment;
     }
 
 
     /// <summary>
     /// A doubly linked list of text nodes
     /// </summary>
-    class TextNodeList : IEnumerable
+    public class TextNodeList<TFont> : IEnumerable
+		where TFont : class
     {
         public TextNode Head;
         public TextNode Tail;
@@ -109,7 +109,7 @@ namespace QuickFont
 
         }
 
-        public void MeasureNodes(QFontData fontData, QFontRenderOptions options){
+		public void MeasureNodes(QFontData<TFont> fontData, QFontRenderOptions options){
             
             foreach(TextNode node in this){
 				if (Math.Abs (node.Length) < float.Epsilon)
@@ -119,7 +119,7 @@ namespace QuickFont
 
 
 
-        private float MeasureTextNodeLength(TextNode node, QFontData fontData, QFontRenderOptions options)
+		private float MeasureTextNodeLength(TextNode node, QFontData<TFont> fontData, QFontRenderOptions options)
         {
 
             bool monospaced = fontData.IsMonospacingActive(options);
@@ -264,7 +264,7 @@ namespace QuickFont
 
         public IEnumerator GetEnumerator()
         {
-            return new TextNodeListEnumerator(this);
+			return new TextNodeListEnumerator<TFont>(this);
         }
 
         #endregion
@@ -272,12 +272,13 @@ namespace QuickFont
 
 
 
-        private class TextNodeListEnumerator : IEnumerator
+		private class TextNodeListEnumerator<TFont> : IEnumerator
+			where TFont : class
         {
             private TextNode currentNode = null;
-            private TextNodeList targetList;
+			private TextNodeList<TFont> targetList;
 
-            public TextNodeListEnumerator(TextNodeList targetList)
+			public TextNodeListEnumerator(TextNodeList<TFont> targetList)
             {
                 this.targetList = targetList;
             }

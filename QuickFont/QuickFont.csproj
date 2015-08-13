@@ -82,6 +82,7 @@
     <Compile Include="TextNodeList.cs" />
     <Compile Include="TexturePage.cs" />
     <Compile Include="QVertexBuffer.cs" />
+    <Compile Include="IFont.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ChangeLog.txt" />

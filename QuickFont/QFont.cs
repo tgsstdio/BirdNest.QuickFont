@@ -8,11 +8,20 @@ using OpenTK.Graphics;
 
 namespace QuickFont
 {
-    public class QFont
+	public class QFont : IFont<QFont>
     {
         //private QFontRenderOptions options = new QFontRenderOptions();
         private Stack<QFontRenderOptions> optionsStack = new Stack<QFontRenderOptions>();
-        internal QFontData fontData;
+		internal QFontData<QFont> fontData;
+
+		#region IFont implementation
+
+		public void SetData (QFontData<QFont> data)
+		{
+			fontData = data;
+		}
+
+		#endregion
         
         bool UsingVertexBuffers;
         public QVertexBuffer[] VertexBuffers = new QVertexBuffer[0];
@@ -39,8 +48,8 @@ namespace QuickFont
 
         #region Constructors and font builders
 
-        private QFont() { }
-        internal QFont(QFontData fontData) { this.fontData = fontData; }
+        public QFont() { }
+		internal QFont(QFontData<QFont> fontData) { this.fontData = fontData; }
         public QFont(Font font) : this(font, null) { }
         public QFont(Font font, QFontBuilderConfiguration config)
         {
@@ -100,7 +109,8 @@ namespace QuickFont
         public static void CreateTextureFontFiles(Font font, string newFontName, QFontBuilderConfiguration config)
         {
             var fontData = BuildFont(font, config, newFontName);
-            Builder.SaveQFontDataToFile(fontData, newFontName);
+
+			Helper.SaveQFontDataToFile<QFont>(fontData, newFontName);
         }
 
         
@@ -119,7 +129,7 @@ namespace QuickFont
             if (!fontFamily.IsStyleAvailable(style))
                 throw new ArgumentException("Font file: " + fileName + " does not support style: " + style);
 
-            QFontData fontData = null;
+			QFontData<QFont> fontData = null;
             if (config == null)
                 config = new QFontBuilderConfiguration();
 
@@ -128,7 +138,7 @@ namespace QuickFont
                 fontData  = BuildFont(font, config, newFontName);
             }
 
-            Builder.SaveQFontDataToFile(fontData, newFontName);
+			Helper.SaveQFontDataToFile<QFont>(fontData, newFontName);
             
         }
 
@@ -149,7 +159,7 @@ namespace QuickFont
                 transToVp = OrthogonalTransform(out fontScale);
           
             QFont qfont = new QFont();
-            qfont.fontData = Builder.LoadQFontDataFromFile(filePath, downSampleFactor * fontScale, loaderConfig);
+			qfont.fontData = Helper.LoadQFontDataFromFile<QFont>(filePath, downSampleFactor * fontScale, loaderConfig);
 
             if (loaderConfig.ShadowConfig != null)
                 qfont.Options.DropShadowActive = true;
@@ -159,9 +169,9 @@ namespace QuickFont
             return qfont;
         }
   
-        private static QFontData BuildFont(Font font, QFontBuilderConfiguration config, string saveName){
+		private static QFontData<QFont> BuildFont(Font font, QFontBuilderConfiguration config, string saveName){
 
-            Builder builder = new Builder(font, config);
+			var builder = new Builder<QFont, QFontData<QFont>>(font, config);
             return builder.BuildFontData(saveName);
         }
 
@@ -435,7 +445,7 @@ namespace QuickFont
 
 
 
-        public void Print(ProcessedText processedText, Vector2 position)
+        public void Print(ProcessedText<QFont> processedText, Vector2 position)
         {
             position = TransformPositionToViewport(position);
             position = LockToPixel(position);
@@ -475,13 +485,13 @@ namespace QuickFont
 		/// <param name="text"></param>
 		/// <param name="bounds"></param>
 		/// <returns></returns>
-		public ProcessedText ProcessText(string text, float maxWidth, QFontAlignment alignment)
+		public ProcessedText<QFont> ProcessText(string text, float maxWidth, QFontAlignment alignment)
 		{
 			//TODO: bring justify and alignment calculations in here
 
 			maxWidth = TransformWidthToViewport(maxWidth);
 
-			var nodeList = new TextNodeList(text);
+			var nodeList = new TextNodeList<QFont>(text);
 			nodeList.MeasureNodes(fontData, Options);
 
 			//we "crumble" words that are two long so that that can be split up
@@ -497,7 +507,7 @@ namespace QuickFont
 			nodeList.MeasureNodes(fontData, Options);
 
 
-			var processedText = new ProcessedText();
+			var processedText = new ProcessedText<QFont>();
 			processedText.textNodeList = nodeList;
 			processedText.maxWidth = maxWidth;
 			processedText.alignment = alignment;
@@ -582,7 +592,7 @@ namespace QuickFont
         /// </summary>
         /// <param name="processedText"></param>
         /// <returns></returns>
-        public SizeF Measure(ProcessedText processedText)
+		public SizeF Measure(ProcessedText<QFont> processedText)
         {
             return TransformMeasureFromViewport(PrintOrMeasure(processedText, true));
         }
@@ -1076,13 +1086,13 @@ namespace QuickFont
 		/// <param name = "maxSize"></param>
 		/// <param name = "alignment"></param>
         /// <returns></returns>
-		public ProcessedText ProcessText(string text, Box2 maxSize, QFontAlignment alignment)
+		public ProcessedText<QFont> ProcessText(string text, Box2 maxSize, QFontAlignment alignment)
         {
             //TODO: bring justify and alignment calculations in here
 
 			var width = TransformWidthToViewport(maxSize.Width);
 
-            var nodeList = new TextNodeList(text);
+			var nodeList = new TextNodeList<QFont>(text);
             nodeList.MeasureNodes(fontData, Options);
 
             //we "crumble" words that are two long so that that can be split up
@@ -1098,7 +1108,7 @@ namespace QuickFont
             nodeList.MeasureNodes(fontData, Options);
 
 
-            var processedText = new ProcessedText();
+			var processedText = new ProcessedText<QFont>();
             processedText.textNodeList = nodeList;
 			processedText.maxWidth = width;
             processedText.alignment = alignment;
@@ -1114,7 +1124,7 @@ namespace QuickFont
         /// Prints text as previously processed with a boundary and alignment.
         /// </summary>
         /// <param name="processedText"></param>
-        public void Print(ProcessedText processedText)
+		public void Print(ProcessedText<QFont> processedText)
         {
             PrintOrMeasure(processedText, false);
         }
@@ -1133,7 +1143,7 @@ namespace QuickFont
 		}
 
 
-        private SizeF PrintOrMeasure(ProcessedText processedText, bool measureOnly)
+		private SizeF PrintOrMeasure(ProcessedText<QFont> processedText, bool measureOnly)
         {
             // init values we'll return
             float maxMeasuredWidth = 0f;

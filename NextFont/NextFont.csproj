@@ -43,6 +43,12 @@
     <Compile Include="NxFont.cs" />
     <Compile Include="NxFontBuilderConfiguration.cs" />
     <Compile Include="BindlessTextureHandle.cs" />
+    <Compile Include="NxFontLoaderConfiguration.cs" />
+    <Compile Include="TripleBufferLock.cs" />
+    <Compile Include="BufferLock.cs" />
+    <Compile Include="NxFontData.cs" />
+    <Compile Include="IGlyphRenderer.cs" />
+    <Compile Include="BufferedGlyphRenderer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace QuickFont
 {
-    public class QFontData
+	public class QFontData<TFont> where TFont : class
     {
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace QuickFont
         /// <summary>
         /// Null if no dropShadow is available
         /// </summary>
-        public QFont dropShadow;
+		public TFont dropShadow;
 
 
         /// <summary>
