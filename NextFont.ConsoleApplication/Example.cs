@@ -5,6 +5,7 @@ using OpenTK.Graphics;
 using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
+using System.IO;
 
 namespace NextFont.ConsoleApplication
 {
@@ -117,6 +118,8 @@ namespace NextFont.ConsoleApplication
 		double cnt = 0;
 		double boundsAnimationCnt = 1.0f;
 
+		bool useShader = false;
+
 		private void InitialiseKeyDown()
 		{
 			KeyDown += (sender, ke) => {
@@ -131,6 +134,8 @@ namespace NextFont.ConsoleApplication
 				switch (ke.Key)
 				{
 				case Key.Space:
+					useShader = !useShader;
+					break;
 				case Key.Right:
 					currentDemoPage++;
 					break;
@@ -190,6 +195,15 @@ namespace NextFont.ConsoleApplication
 			};
 		}
 
+		private void CheckGLError()
+		{
+			var error = GL.GetError ();
+			if (error != ErrorCode.NoError)
+			{
+  				throw new Exception (error.ToString());
+			}
+		}
+
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
@@ -237,7 +251,190 @@ namespace NextFont.ConsoleApplication
 
 			GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			GL.Disable(EnableCap.DepthTest);
+
+			vertexBuffer = GL.GenBuffer ();
+			CheckGLError ();
+			GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+			CheckGLError ();
+			GL.BufferData<float> (BufferTarget.ArrayBuffer, (IntPtr)(sizeof(float) * vertexData.Length), vertexData, BufferUsageHint.StaticDraw);
+			CheckGLError ();
+			GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+			CheckGLError ();
+
+
+			drawIDBuffer = GL.GenBuffer ();
+			GL.BindBuffer (BufferTarget.ArrayBuffer, drawIDBuffer);
+			CheckGLError ();
+			GL.BufferData<uint> (BufferTarget.ArrayBuffer, (IntPtr)(sizeof(int) * drawIDData.Length), drawIDData, BufferUsageHint.StaticDraw);
+			CheckGLError ();
+			GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+			CheckGLError ();
+
+
+			elementBuffer = GL.GenBuffer ();
+			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
+			CheckGLError ();
+			GL.BufferData<uint> (BufferTarget.ElementArrayBuffer, (IntPtr)(sizeof(uint) * elementData.Length), elementData, BufferUsageHint.StaticDraw);
+			CheckGLError ();
+			GL.BindBuffer (BufferTarget.ElementArrayBuffer, 0);
+			CheckGLError ();
+
+			int stride = sizeof(float) * 5;
+			const int POSITION = 0;
+			const int COLOUR = 1;
+			const int DRAW_ID = 2;
+
+			int offset = 0;
+
+
+
+			/// VERTEX
+			vbo = GL.GenVertexArray();
+			GL.BindVertexArray (vbo);
+			CheckGLError ();
+
+				int elementCount = 2;
+				int size = elementCount * sizeof(float);
+				int index = POSITION;
+
+				GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+				GL.EnableVertexAttribArray (index);
+				CheckGLError ();
+				GL.VertexAttribPointer(index, elementCount, VertexAttribPointerType.Float, false, stride, (IntPtr)offset); 
+				CheckGLError ();
+				GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+				CheckGLError ();
+
+				offset += size;
+				elementCount = 3;
+				size = elementCount * sizeof(float);
+				index = COLOUR;
+
+				GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+				GL.EnableVertexAttribArray (index);
+				CheckGLError ();
+				GL.VertexAttribPointer(index, elementCount, VertexAttribPointerType.Float, false, stride, (IntPtr)offset); 
+				CheckGLError ();
+				GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+				CheckGLError ();
+
+				offset = 0;
+				stride = sizeof(int);
+				elementCount = 1;
+				size = elementCount * sizeof(int);
+				index = DRAW_ID;
+
+				GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+				GL.EnableVertexAttribArray (index);
+				CheckGLError ();
+				GL.VertexAttribIPointer(index, elementCount, VertexAttribIntegerType.Int, stride, (IntPtr)offset); 
+				CheckGLError ();
+				GL.VertexAttribDivisor(index:index, divisor:1);
+				CheckGLError ();
+				GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+				CheckGLError ();
+
+				GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
+				CheckGLError ();
+			GL.BindVertexArray(0);
+			CheckGLError ();
+
+			InitialiseUnload ();
+
+			using (var vert = File.OpenRead (@"Shaders/multi-draw-indirect.vert"))
+			using (var frag = File.OpenRead (@"Shaders/multi-draw-indirect.frag"))				
+			{
+				var manager = new ShaderManager ();
+				programID = manager.CreateFragmentProgram (vert, frag, "");
+
+				GL.UseProgram (programID);
+				GL.BindVertexArray (vbo);
+					var posAttrib = GL.GetAttribLocation (programID, "in_position");
+					if (posAttrib != -1)
+					{
+						CheckGLError ();
+						GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+						CheckGLError ();
+						GL.VertexAttribPointer (posAttrib, 2, VertexAttribPointerType.Float, false, sizeof(float) * 5, (IntPtr)0);		
+						CheckGLError ();
+						GL.EnableVertexAttribArray (posAttrib);
+						CheckGLError ();
+					}
+
+					var colorAttrib = GL.GetAttribLocation (programID, "in_colour");
+					if (colorAttrib != -1)
+					{
+						CheckGLError ();
+						GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
+						CheckGLError ();
+						GL.VertexAttribPointer (colorAttrib, 3, VertexAttribPointerType.Float, false, sizeof(float) * 5, (IntPtr)(sizeof(float) * 2));		
+						CheckGLError ();
+						GL.EnableVertexAttribArray (colorAttrib);
+						CheckGLError ();
+					}
+
+					var drawIDAttrib = GL.GetAttribLocation (programID, "in_drawId");
+					if (drawIDAttrib != -1)
+					{
+						CheckGLError ();
+						GL.BindBuffer (BufferTarget.ArrayBuffer, drawIDBuffer);
+						CheckGLError ();
+						GL.VertexAttribIPointer (drawIDAttrib, 1, VertexAttribIntegerType.UnsignedInt, sizeof(uint), (IntPtr)0);		
+						CheckGLError ();
+						GL.VertexAttribDivisor (drawIDAttrib, 1);
+						CheckGLError ();
+						GL.EnableVertexAttribArray (colorAttrib);
+						CheckGLError ();
+					}
+
+					GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
+				GL.BindVertexArray (0);
+				GL.UseProgram (0);
+			}
 		}
+
+		void InitialiseUnload ()
+		{
+			Unload += (sender, e) =>  {
+				GL.DeleteProgram(programID);
+				GL.DeleteBuffer (elementBuffer);
+				GL.DeleteBuffer (drawIDBuffer);
+				GL.DeleteBuffer (vertexBuffer);
+				GL.DeleteVertexArray (vbo);
+			};
+		}
+
+		public int programID;
+
+		public int vbo;
+		public int vertexBuffer;
+		public int drawIDBuffer;
+		public int elementBuffer;
+
+		private float[] vertexData = {
+			-1f, -1f,
+			1.0f, 1.0f, 1.0f,
+
+			0.9f, -1f,
+			0.9f, 0.9f, 0.9f,
+
+			1f, 1f,
+			0.9f, 0.9f, 0.9f,
+
+			-1f, 0.9f,
+			0.9f, 0.9f, 0.9f,
+		};
+
+		public uint[] drawIDData = {
+			1, 2,
+		};
+
+		public uint[] elementData = {
+			0, 1, 2,
+			2, 3, 0,
+		};
+
+
 
 		protected override void OnUpdateFrame(FrameEventArgs e)
 		{
@@ -518,19 +715,64 @@ namespace NextFont.ConsoleApplication
 		protected override void OnRenderFrame(FrameEventArgs e)
 		{
 			base.OnRenderFrame(e);
-
+			//GL.ClearColor(0, 1, 1, 1);
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-			GL.Begin(PrimitiveType.Quads);
-				GL.Color3(1.0f, 1.0f, 1.0);
-				GL.Vertex2(-1f, -1f);
-				GL.Color3(0.9f, 0.9f, 0.9f);
-				GL.Vertex2(-1f, 1f);
-				GL.Color3(0.9f, 0.9f, 0.9f);
-				GL.Vertex2(1f, 1f);
-				GL.Color3(0.9f, 0.9f, 0.9f);
-				GL.Vertex2(1f, -1f);
-			GL.End();
+			//GL.UseProgram(programID);
+			GL.BindVertexArray (0);
+
+//			GL.Begin(PrimitiveType.Quads);
+//				GL.Color3(1.0f, 1.0f, 1.0);
+//				GL.Vertex2(-1f, -1f);
+//				GL.Color3(0.9f, 0.9f, 0.9f);
+//				GL.Vertex2(-1f, 1f);
+//				GL.Color3(0.9f, 0.9f, 0.9f);
+//				GL.Vertex2(1f, 1f);
+//				GL.Color3(0.9f, 0.9f, 0.9f);
+//				GL.Vertex2(1f, -1f);
+//			GL.End();
+
+			var commands = new DrawElementsIndirectCommand[1];
+
+			int stride = System.Runtime.InteropServices.Marshal.SizeOf (typeof(DrawElementsIndirectCommand));
+
+			commands [0].Count = (uint)elementData.Length;
+			commands [0].InstanceCount = 1;
+			commands [0].FirstIndex = 0;
+			commands [0].BaseVertex = 0;
+			commands [0].BaseInstance = 1;
+//
+//			GL.UseProgram(programID);
+//			CheckGLError ();
+//
+////			GL.BindVertexArray (0);
+			GL.BindVertexArray (vbo);
+			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
+//			CheckGLError ();
+//			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
+//			CheckGLError ();
+			if (useShader)
+			{
+				GL.UseProgram (programID);
+			}
+
+			GL.MultiDrawElementsIndirect<DrawElementsIndirectCommand>(
+				All.Triangles,
+				All.UnsignedInt,
+				commands,
+				commands.Length,
+				stride);
+//			GL.DrawArrays(PrimitiveType.Triangles, 
+//				0,
+//				2);
+		//	GL.UseProgram(programID);
+
+			//GL.DrawElements(PrimitiveType.Triangles, elementData.Length, DrawElementsType.UnsignedInt, 0);
+			GL.UseProgram(0);
+			//CheckGLError ();
+			//GL.BindBuffer (BufferTarget.ElementArrayBuffer, 0);
+			//GL.BindVertexArray (0);
+			//GL.UseProgram(0);
 
 			SwapBuffers();
 		}
