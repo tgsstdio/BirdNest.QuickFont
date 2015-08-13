@@ -168,7 +168,7 @@ namespace NextFont
 			get { return fontData.GetMonoSpaceWidth(Options); }
 		}
 
-		#region SafePrint
+		#region SafeMeasure
 
 		public SizeF SafeMeasure(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
 		{
@@ -176,7 +176,12 @@ namespace NextFont
 			return SafePrintOrMeasure(processedText,  true);
 		}
 
-		public void SafePrint(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
+		#endregion
+
+		#region SafePrint
+
+
+		public void SafePrint(Matrix4 transform, Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
 		{
 			var processedText = SafeProcessText(clientRectangle, text, maxWidth, alignment);
 			SafePrintOrMeasure(processedText,  false);
@@ -277,7 +282,7 @@ namespace NextFont
 			return new SizeF(maxMeasuredWidth, yOffset + LineSpacing - yPos);
 		}
 
-		public ProcessedText<NxFont> SafeProcessText(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
+		private ProcessedText<NxFont> SafeProcessText(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
 		{
 			//TODO: bring justify and alignment calculations in here
 
@@ -662,8 +667,9 @@ namespace NextFont
 			position = LockToPixel(position);
 
 			//GL.PushMatrix();
-			//GL.Translate(position.X, position.Y, 0f);
-			SafePrint(clientRectangle, text, maxWidth, alignment);
+				var offset = new Vector3(position.X, position.Y, 0f);
+				var headShift = Matrix4.CreateTranslation(offset);
+				SafePrint(headShift, clientRectangle, text, maxWidth, alignment);
 			//GL.PopMatrix();
 		}
 
@@ -697,7 +703,7 @@ namespace NextFont
 
 		#region Print
 
-		public SizeF Print(string text, QFontAlignment alignment)
+		public SizeF Print(Matrix4 transform, string text, QFontAlignment alignment)
 		{
 			return PrintOrMeasure(text, alignment, false);
 		}
@@ -812,7 +818,7 @@ namespace NextFont
 		}
 
 		Vector3 PrintOffset;
-		public void RenderGlyph(float x, float y, char c, bool isDropShadow)
+		private void RenderGlyph(float x, float y, char c, bool isDropShadow)
 		{
 			var glyph = fontData.CharSetMapping[c];
 

@@ -1,16 +1,14 @@
 ﻿<Properties StartupItem="NextFont.ConsoleApplication\NextFont.ConsoleApplication.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Example.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Program.cs">
     <Files>
-      <File FileName="NextFont\NxFont.cs" Line="664" Column="22" />
       <File FileName="NextFont\IGlyphRenderer.cs" Line="1" Column="1" />
       <File FileName="NextFont\BufferedGlyphRenderer.cs" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Program.cs" Line="20" Column="1" />
-      <File FileName="Example\Game.cs" Line="298" Column="16" />
-      <File FileName="QuickFont\QFont.cs" Line="436" Column="1" />
+      <File FileName="Example\Game.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFont.cs" Line="1" Column="1" />
       <File FileName="QuickFont\TextNodeList.cs" Line="1" Column="1" />
       <File FileName="QuickFont\QFontData.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="117" Column="18" />
       <File FileName="NextFont.ConsoleApplication\packages.config" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
