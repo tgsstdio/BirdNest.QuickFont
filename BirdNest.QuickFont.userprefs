@@ -1,17 +1,28 @@
 ﻿<Properties StartupItem="NextFont.ConsoleApplication\NextFont.ConsoleApplication.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.frag">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont\NxFontFileLoader.cs">
     <Files>
-      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\Example.cs" Line="765" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.vert" Line="7" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.frag" Line="3" Column="26" />
-      <File FileName="NextFont.ConsoleApplication\DrawElementsIndirectCommand.cs" Line="10" Column="25" />
-      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\ShaderManager.cs" Line="52" Column="4" />
-      <File FileName="NextFont.ConsoleApplication\Program.cs" Line="20" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\packages.config" Line="1" Column="1" />
-      <File FileName="DynamicStreaming\Program.cs" Line="1" Column="1" />
-      <File FileName="DynamicStreaming\MapPersistent.cs" Line="217" Column="10" />
-      <File FileName="DynamicStreaming\DynamicStreamingProblem.cs" Line="23" Column="1" />
+      <File FileName="Example\Game.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFont.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QBitmap.cs" Line="75" Column="1" />
+      <File FileName="QuickFont\QFontGlyph.cs" Line="1" Column="1" />
+      <File FileName="NextFont\NxFont.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\KerningCalculator.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\Builder.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFontRenderOptions.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QVertexBuffer.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\TexturePage.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFontDataInformation.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\TextNodeList.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\IFont.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFontData.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\Helper.cs" Line="1" Column="1" />
+      <File FileName="NextFont\BufferedGlyphRenderer.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFontFileLoader.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\IQFontLoader.cs" Line="1" Column="1" />
+      <File FileName="NextFont\INxFontLoader.cs" Line="1" Column="1" />
+      <File FileName="NextFont\NxFontFileLoader.cs" Line="47" Column="6" />
+      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

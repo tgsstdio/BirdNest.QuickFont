@@ -12,8 +12,7 @@ namespace QuickFont
     /// Class for building a Quick Font, given a Font
     /// and a configuration object.
     /// </summary>
-	public class Builder<TFont, TFontData> where TFont : class, IFont<TFont>, new()
-										   where TFontData : QFontData<TFont>
+	public class Builder<TFont> where TFont : class, IFont, new()
     {
 
         private string charSet;
@@ -163,14 +162,14 @@ namespace QuickFont
             return bmp;
         }
 
-		public QFontData<TFont> BuildFontData()
-        {
-            return BuildFontData(null);
+		public QFontData BuildFontData(out TFont dropShadowFont)
+        {			
+			return BuildFontData(null, out dropShadowFont);
         }
 
 		const string SUPERSAMPLE_LEVELS_MUST_BE_A_POWER_OF_TWO_ERROR = "SuperSampleLevels must be a power of two when using ForcePowerOfTwo.";
 
-		public QFontData<TFont> BuildFontData(string saveName)
+		public QFontData BuildFontData(string saveName, out TFont dropShadowFont)
         {
             if (config.ForcePowerOfTwo && config.SuperSampleLevels != Helper.PowerOfTwo(config.SuperSampleLevels))
             {
@@ -223,7 +222,7 @@ namespace QuickFont
             foreach (var page in bitmapPages)
                 pages.Add(new TexturePage(page.bitmapData));
 
-			var fontData = new QFontData<TFont>();
+			var fontData = new QFontData();
             fontData.CharSetMapping = Helper.CreateCharGlyphMapping(glyphs);
             fontData.Pages = pages.ToArray();
             fontData.CalculateMeanWidth();
@@ -243,10 +242,14 @@ namespace QuickFont
             }
 
 
-            if (config.ShadowConfig != null)
-				fontData.dropShadow = Helper.BuildDropShadow<TFont, QFontData<TFont>>(bitmapPages, glyphs, config.ShadowConfig, charSet.ToCharArray(),config.KerningConfig.alphaEmptyPixelTolerance);
-
-
+			if (config.ShadowConfig != null)
+			{
+				dropShadowFont = Helper.BuildDropShadow<TFont> (bitmapPages, glyphs, config.ShadowConfig, charSet.ToCharArray (), config.KerningConfig.alphaEmptyPixelTolerance);
+			}
+			else
+			{
+				dropShadowFont = null;
+			}
 
             foreach (var page in bitmapPages)
                 page.Free();

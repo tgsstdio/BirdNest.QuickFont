@@ -1,8 +1,8 @@
 ﻿namespace QuickFont
 {
-	public interface IFont<TData> where TData : class ,new() 
-	{
-		void SetData(QFontData<TData> data);
+	public interface IFont
+	{		
+		void SetData(QFontData data);
 	}
 }
 

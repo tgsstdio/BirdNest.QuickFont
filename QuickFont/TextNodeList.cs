@@ -33,10 +33,9 @@ namespace QuickFont
     /// Class to hide TextNodeList and related classes from 
     /// user whilst allowing a textNodeList to be passed around.
     /// </summary>
-    public class ProcessedText<TFont>
-		where TFont : class
+    public class ProcessedText
     {
-		public TextNodeList<TFont> textNodeList;
+		public TextNodeList textNodeList;
 		public float maxWidth;
 		public QFontAlignment alignment;
     }
@@ -45,8 +44,7 @@ namespace QuickFont
     /// <summary>
     /// A doubly linked list of text nodes
     /// </summary>
-    public class TextNodeList<TFont> : IEnumerable
-		where TFont : class
+    public class TextNodeList : IEnumerable
     {
         public TextNode Head;
         public TextNode Tail;
@@ -109,51 +107,13 @@ namespace QuickFont
 
         }
 
-		public void MeasureNodes(QFontData<TFont> fontData, QFontRenderOptions options){
-            
-            foreach(TextNode node in this){
+		public void MeasureNodes(QFontData fontData, QFontRenderOptions options){
+
+			foreach(TextNode node in this){
 				if (Math.Abs (node.Length) < float.Epsilon)
-					node.Length = MeasureTextNodeLength (node, fontData, options);
-            }
-        }
-
-
-
-		private float MeasureTextNodeLength(TextNode node, QFontData<TFont> fontData, QFontRenderOptions options)
-        {
-
-            bool monospaced = fontData.IsMonospacingActive(options);
-            float monospaceWidth = fontData.GetMonoSpaceWidth(options);
-
-            if (node.Type == TextNodeType.Space)
-            {
-                if (monospaced)
-                    return monospaceWidth;
-
-                return (float)Math.Ceiling(fontData.meanGlyphWidth * options.WordSpacing);
-            }
-
-
-            float length = 0f;
-            if (node.Type == TextNodeType.Word)
-            {
-                
-                for (int i = 0; i < node.Text.Length; i++)
-                {
-                    char c = node.Text[i];
-                    if (fontData.CharSetMapping.ContainsKey(c))
-                    {
-                        if (monospaced)
-                            length += monospaceWidth;
-                        else
-                            length += (float)Math.Ceiling(fontData.CharSetMapping[c].rect.Width + fontData.meanGlyphWidth * options.CharacterSpacing + fontData.GetKerningPairCorrection(i, node.Text, node));
-                    }
-                }
-            }
-            return length;
-        }
-
-
+					node.Length = fontData.MeasureTextNodeLength (node, options);
+			}
+		}
 
         /// <summary>
         /// Splits a word into sub-words of size less than or equal to baseCaseSize 
@@ -264,7 +224,7 @@ namespace QuickFont
 
         public IEnumerator GetEnumerator()
         {
-			return new TextNodeListEnumerator<TFont>(this);
+			return new TextNodeListEnumerator(this);
         }
 
         #endregion
@@ -272,13 +232,12 @@ namespace QuickFont
 
 
 
-		private class TextNodeListEnumerator<TFont> : IEnumerator
-			where TFont : class
+		private class TextNodeListEnumerator : IEnumerator
         {
             private TextNode currentNode = null;
-			private TextNodeList<TFont> targetList;
+			private TextNodeList targetList;
 
-			public TextNodeListEnumerator(TextNodeList<TFont> targetList)
+			public TextNodeListEnumerator(TextNodeList targetList)
             {
                 this.targetList = targetList;
             }

@@ -9,10 +9,10 @@ namespace NextFont
 	public class BufferedGlyphRenderer : IGlyphRenderer
 	{
 		private readonly List<GlyphKey> mCharacters;
-		private readonly QFontData<NxFont> mFontData;
+		private readonly QFontData mFontData;
 		private Vector3 PrintOffset;
 		private Color4 mFontColor;
-		public BufferedGlyphRenderer (QFontData<NxFont> fontData, Vector3 printOffset, Color4 fontColor)
+		public BufferedGlyphRenderer (QFontData fontData, Vector3 printOffset, Color4 fontColor)
 		{
 			mFontData = fontData;
 			mCharacters = new List<GlyphKey> ();

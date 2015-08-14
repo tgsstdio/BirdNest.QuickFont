@@ -87,7 +87,7 @@ namespace QuickFont
                 GL.DisableClientState(cap);
         }
 
-		public static void SaveQFontDataToFile<TFont>(QFontData<TFont> data, string filePath) where TFont : class
+		public static void SaveQFontDataToFile(QFontData data, string filePath) 
 		{
 			var lines = data.Serialize();
 			StreamWriter writer = new StreamWriter(filePath + ".qfont");
@@ -100,7 +100,7 @@ namespace QuickFont
 
 		private delegate bool EmptyDel(BitmapData data, int x, int y);
 
-		private static void RetargetGlyphRectangleOutwards(BitmapData bitmapData, QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
+		public static void RetargetGlyphRectangleOutwards(BitmapData bitmapData, QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
 		{
 			int startX,endX;
 			int startY,endY;
@@ -237,158 +237,34 @@ namespace QuickFont
 			return null;
 		}
 
-		public static void CreateBitmapPerGlyph(QFontGlyph[] sourceGlyphs, QBitmap[] sourceBitmaps, out QFontGlyph[]  destGlyphs, out QBitmap[] destBitmaps){
-			destBitmaps = new QBitmap[sourceGlyphs.Length];
-			destGlyphs = new QFontGlyph[sourceGlyphs.Length];
-			for(int i = 0; i < sourceGlyphs.Length; i++){
-				var sg = sourceGlyphs[i];
-				destGlyphs[i] = new QFontGlyph(i,new Rectangle(0,0,sg.rect.Width,sg.rect.Height),sg.yOffset,sg.character);
-				destBitmaps[i] = new QBitmap(new Bitmap(sg.rect.Width,sg.rect.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb));
-				QBitmap.Blit(sourceBitmaps[sg.page].bitmapData,destBitmaps[i].bitmapData,sg.rect,0,0);
+		public static QFontDataInformation LoadQFontInformation<TFont>(Stream fs)
+		{
+			var lines = new List<String>();
+			using (var reader = new StreamReader (fs))
+			{
+				string line;
+				while ((line = reader.ReadLine ()) != null)
+					lines.Add (line);
+
+				var data = new QFontData();
+				return data.Deserialize(lines);
 			}
 		}
 
-		public static QFontData<TFont> LoadQFontDataFromFile<TFont>(string filePath, float downSampleFactor, QFontLoaderConfiguration loaderConfig)
-			where TFont : class, IFont<TFont>, new()
+		static List<QBitmap> LoadBitmaps (string filePath, int pageCount)
 		{
-			var lines = new List<String>();
-			StreamReader reader = new StreamReader(filePath);
-			string line;
-			while((line = reader.ReadLine()) != null)
-				lines.Add(line);
-			reader.Close();
-
-			var data = new QFontData<TFont>();
-			int pageCount = 0;
-			char[] charSet;
-			data.Deserialize(lines, out pageCount, out charSet);
-
-
-			string namePrefix = filePath.Replace(".qfont","").Replace(" ", "");
-
-			var bitmapPages = new List<QBitmap>();
-
-
-
+			string namePrefix = filePath.Replace (".qfont", "").Replace (" ", "");
+			var bitmapPages = new List<QBitmap> ();
 			if (pageCount == 1)
 			{
-				bitmapPages.Add(new QBitmap(namePrefix + ".png"));
+				bitmapPages.Add (new QBitmap (namePrefix + ".png"));
 			}
 			else
 			{
 				for (int i = 0; i < pageCount; i++)
-					bitmapPages.Add(new QBitmap(namePrefix + "_sheet_" + i));
+					bitmapPages.Add (new QBitmap (namePrefix + "_sheet_" + i));
 			}
-
-
-			foreach (var glyph in data.CharSetMapping.Values)
-				RetargetGlyphRectangleOutwards(bitmapPages[glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
-
-			var intercept = FirstIntercept(data.CharSetMapping);
-			if (intercept != null)
-			{
-				throw new Exception("Failed to load font from file. Glyphs '" + intercept[0] + "' and '" + intercept[1] + "' were overlapping. If you are texturing your font without locking pixel opacity, then consider using a larger glyph margin. This can be done by setting QFontBuilderConfiguration myQfontBuilderConfig.GlyphMargin, and passing it into CreateTextureFontFiles.");
-			}
-
-
-			if (downSampleFactor > 1.0f)
-			{
-				foreach (var page in bitmapPages)
-					page.DownScale32((int)(page.bitmap.Width * downSampleFactor), (int)(page.bitmap.Height * downSampleFactor));
-
-				foreach (var glyph in data.CharSetMapping.Values)
-				{
-
-					glyph.rect = new Rectangle((int)(glyph.rect.X * downSampleFactor),
-						(int)(glyph.rect.Y * downSampleFactor),
-						(int)(glyph.rect.Width * downSampleFactor),
-						(int)(glyph.rect.Height * downSampleFactor));
-					glyph.yOffset = (int)(glyph.yOffset * downSampleFactor);
-				}
-			}
-			else if (downSampleFactor < 1.0f )
-			{
-				// If we were simply to shrink the entire texture, then at some point we will make glyphs overlap, breaking the font.
-				// For this reason it is necessary to copy every glyph to a separate bitmap, and then shrink each bitmap individually.
-				QFontGlyph[] shrunkGlyphs;
-				QBitmap[] shrunkBitmapsPerGlyph;
-				CreateBitmapPerGlyph(Helper.ToArray(data.CharSetMapping.Values), bitmapPages.ToArray(), out shrunkGlyphs, out shrunkBitmapsPerGlyph);
-
-				//shrink each bitmap
-				for (int i = 0; i < shrunkGlyphs.Length; i++)
-				{   
-					var bmp = shrunkBitmapsPerGlyph[i];
-					bmp.DownScale32(Math.Max((int)(bmp.bitmap.Width * downSampleFactor),1), Math.Max((int)(bmp.bitmap.Height * downSampleFactor),1));
-					shrunkGlyphs[i].rect = new Rectangle(0, 0, bmp.bitmap.Width, bmp.bitmap.Height);
-					shrunkGlyphs[i].yOffset = (int)(shrunkGlyphs[i].yOffset * downSampleFactor);
-				}
-
-				var shrunkBitmapData = new BitmapData[shrunkBitmapsPerGlyph.Length];
-				for(int i = 0; i < shrunkBitmapsPerGlyph.Length; i ++ ){
-					shrunkBitmapData[i] = shrunkBitmapsPerGlyph[i].bitmapData;
-				}
-
-				//use roughly the same number of pages as before..
-				int newWidth = (int)(bitmapPages[0].bitmap.Width * (0.1f + downSampleFactor));
-				int newHeight = (int)(bitmapPages[0].bitmap.Height * (0.1f + downSampleFactor));
-
-				//free old bitmap pages since we are about to chuck them away
-				for (int i = 0; i < pageCount; i++)
-					bitmapPages[i].Free();
-
-				QFontGlyph[] shrunkRepackedGlyphs;
-				bitmapPages = Helper.GenerateBitmapSheetsAndRepack(shrunkGlyphs, shrunkBitmapData, newWidth, newHeight, out shrunkRepackedGlyphs, 4, false);
-				data.CharSetMapping = CreateCharGlyphMapping(shrunkRepackedGlyphs);
-
-				foreach (var bmp in shrunkBitmapsPerGlyph)
-					bmp.Free();
-
-				pageCount = bitmapPages.Count;
-			}
-
-
-			data.Pages = new TexturePage[pageCount];
-			for(int i = 0; i < pageCount; i ++ )
-				data.Pages[i] = new TexturePage(bitmapPages[i].bitmapData);
-
-
-			if (Math.Abs (downSampleFactor - 1.0f) > float.Epsilon)
-			{
-				foreach (var glyph in data.CharSetMapping.Values)
-					RetargetGlyphRectangleOutwards (bitmapPages [glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
-
-
-				intercept = FirstIntercept (data.CharSetMapping);
-				if (intercept != null)
-				{
-					throw new Exception ("Failed to load font from file. Glyphs '" + intercept [0] + "' and '" + intercept [1] + "' were overlapping. This occurred only after resizing your texture font, implying that there is a bug in QFont. ");
-				}
-			}
-
-
-
-			var glyphList = new List<QFontGlyph>();
-
-			foreach (var c in charSet)
-				glyphList.Add(data.CharSetMapping[c]);
-
-			if (loaderConfig.ShadowConfig != null)
-				data.dropShadow = Helper.BuildDropShadow<TFont, QFontData<TFont>>(bitmapPages, glyphList.ToArray(), loaderConfig.ShadowConfig, Helper.ToArray(charSet),loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
-
-
-			data.KerningPairs = KerningCalculator.CalculateKerning(Helper.ToArray(charSet), glyphList.ToArray(), bitmapPages, loaderConfig.KerningConfig);
-
-
-
-			data.CalculateMeanWidth();
-			data.CalculateMaxHeight();
-
-
-			for (int i = 0; i < pageCount; i++)
-				bitmapPages[i].Free();
-
-
-			return data;
+			return bitmapPages;
 		}
 
 		public static List<QBitmap> GenerateBitmapSheetsAndRepack(QFontGlyph[] sourceGlyphs, BitmapData[] sourceBitmaps, int destSheetWidth, int destSheetHeight, out QFontGlyph[] destGlyphs, int destMargin, bool usePowerOfTwo)
@@ -536,9 +412,8 @@ namespace QuickFont
 			}
 		}
 
-		public static TFont BuildDropShadow<TFont, TFontData>(List<QBitmap> sourceFontSheets, QFontGlyph[] sourceFontGlyphs, QFontShadowConfiguration shadowConfig, char[] charSet, byte alphaTolerance)
-			where TFont : class, IFont<TFont>, new()
-			where TFontData : QFontData<TFont>, new()
+		public static TFont BuildDropShadow<TFont>(List<QBitmap> sourceFontSheets, QFontGlyph[] sourceFontGlyphs, QFontShadowConfiguration shadowConfig, char[] charSet, byte alphaTolerance)
+			where TFont : IFont, new()
 		{
 
 			QFontGlyph[] newGlyphs;
@@ -577,7 +452,7 @@ namespace QuickFont
 				newTextureSheets.Add(new TexturePage(page.bitmapData));
 
 
-			var fontData = new TFontData();
+			var fontData = new QFontData();
 			fontData.CharSetMapping = new Dictionary<char, QFontGlyph>();
 			for(int i = 0; i < charSet.Length; i++)
 				fontData.CharSetMapping.Add(charSet[i],newGlyphs[i]);

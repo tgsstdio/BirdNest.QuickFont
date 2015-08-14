@@ -6,10 +6,11 @@ using System.Collections.Concurrent;
 using OpenTK;
 using OpenTK.Graphics;
 using System.Collections.Generic;
+using System.IO;
 
 namespace NextFont
 {
-	public class NxFont : IFont<NxFont>
+	public class NxFont : IFont
 	{
 		private ConcurrentStack<QFontRenderOptions> optionsStack;
 
@@ -41,11 +42,11 @@ namespace NextFont
 			}
 		}
 
-		private QFontData<NxFont> fontData;
+		private QFontData fontData;
 
 		#region IFont implementation
 
-		public void SetData (QFontData<NxFont> data)
+		public void SetData (QFontData data)
 		{
 			fontData =  data;
 		}
@@ -62,6 +63,7 @@ namespace NextFont
 		
 		}
 
+		public NxFont DropShadow {get; set;}
 		public NxFont (string fileName, float size, float height, FontStyle style, NxFontBuilderConfiguration config)
 		{
 			optionsStack = new ConcurrentStack<QFontRenderOptions> ();
@@ -83,8 +85,10 @@ namespace NextFont
 			var internalConfig = new QFontBuilderConfiguration ();
 			internalConfig.SuperSampleLevels = config.SuperSampleLevels;
 			using(var font = new Font(fontFamily, size * fontScale * config.SuperSampleLevels, style)){
-				var builder = new Builder<NxFont, QFontData<NxFont>>(font, internalConfig);
-				fontData = builder.BuildFontData(null);
+				var builder = new Builder<NxFont>(font, internalConfig);
+				NxFont dropShadowFont;
+				fontData = builder.BuildFontData(null, out dropShadowFont);
+				DropShadow = dropShadowFont;
 			}
 
 			if (config.ShadowConfig != null)
@@ -103,7 +107,7 @@ namespace NextFont
 
 		}
 
-		static TransformViewport? SetupTransformViewport (float height, bool transformToCurrentOrthogProjection, Matrix4 transform, out float fontScale)
+		public static TransformViewport? SetupTransformViewport (float height, bool transformToCurrentOrthogProjection, Matrix4 transform, out float fontScale)
 		{
 			TransformViewport? transToVp = null;
 			float result = 1f;
@@ -127,29 +131,6 @@ namespace NextFont
 			var viewportTransform = new TransformViewport(left, top, right - left, bottom - top);
 			fontScale = Math.Abs(height / viewportTransform.Height);
 			return viewportTransform;
-		}
-
-		public static NxFont FromQFontFile(string filePath, float height, NxFontLoaderConfiguration loaderConfig) { return FromQFontFile(filePath, height, 1.0f, loaderConfig); }
-		public static NxFont FromQFontFile(string filePath, float height, float downSampleFactor, NxFontLoaderConfiguration loaderConfig)
-		{
-			if (loaderConfig == null)
-			{
-				throw new ArgumentNullException ("loaderConfig");
-			}
-
-			float fontScale;
-			TransformViewport? transToVp = SetupTransformViewport (height, loaderConfig.TransformToCurrentOrthogProjection, loaderConfig.Transform, out fontScale);
-
-			var qfont = new NxFont();
-			var internalConfig = new QFontLoaderConfiguration();
-			qfont.fontData = Helper.LoadQFontDataFromFile<NxFont>(filePath, downSampleFactor * fontScale, internalConfig);
-
-			if (loaderConfig.ShadowConfig != null)
-				qfont.Options.DropShadowActive = true;
-			if (transToVp != null)
-				qfont.Options.TransformToViewport = transToVp;
-
-			return qfont;
 		}
 
 		public float LineSpacing
@@ -187,7 +168,7 @@ namespace NextFont
 			SafePrintOrMeasure(processedText,  false);
 		}
 
-		private SizeF SafePrintOrMeasure(ProcessedText<NxFont> processedText, bool measureOnly)
+		private SizeF SafePrintOrMeasure(ProcessedText processedText, bool measureOnly)
 		{
 			// init values we'll return
 			float maxMeasuredWidth = 0f;
@@ -282,13 +263,13 @@ namespace NextFont
 			return new SizeF(maxMeasuredWidth, yOffset + LineSpacing - yPos);
 		}
 
-		private ProcessedText<NxFont> SafeProcessText(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
+		private ProcessedText SafeProcessText(Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
 		{
 			//TODO: bring justify and alignment calculations in here
 
 			maxWidth = TransformWidthToViewport(clientRectangle, maxWidth);
 
-			var nodeList = new TextNodeList<NxFont>(text);
+			var nodeList = new TextNodeList(text);
 			nodeList.MeasureNodes(fontData, Options);
 
 			//we "crumble" words that are two long so that that can be split up
@@ -304,7 +285,7 @@ namespace NextFont
 			nodeList.MeasureNodes(fontData, Options);
 
 
-			var processedText = new ProcessedText<NxFont>();
+			var processedText = new ProcessedText();
 			processedText.textNodeList = nodeList;
 			processedText.maxWidth = maxWidth;
 			processedText.alignment = alignment;
@@ -872,7 +853,7 @@ namespace NextFont
 		private void RenderDropShadow(float xOffset, float yOffset, char c, QFontGlyph nonShadowGlyph)
 		{
 			//note can cast drop shadow offset to int, but then you can't move the shadow smoothly...
-			if (fontData.dropShadow != null && Options.DropShadowActive)
+			if (DropShadow != null && Options.DropShadowActive)
 			{
 				//note: it's not immediately obvious, but this combined with the paramteters to 
 				//RenderGlyph for the shadow mean that we render the shadow centrally (despite it being a different size)
@@ -881,10 +862,10 @@ namespace NextFont
 				float y = yOffset + (int)(nonShadowGlyph.rect.Height * 0.5f + nonShadowGlyph.yOffset);
 
 				//make sure fontdata font's options are synced with the actual options
-				if (fontData.dropShadow.Options != Options)
-					fontData.dropShadow.Options = Options;
+				if (DropShadow.Options != Options)
+					DropShadow.Options = Options;
 
-				fontData.dropShadow.RenderGlyph(
+				DropShadow.RenderGlyph(
 					x + (fontData.meanGlyphWidth * Options.DropShadowOffset.X + nonShadowGlyph.rect.Width * 0.5f),
 					y + (fontData.meanGlyphWidth * Options.DropShadowOffset.Y + nonShadowGlyph.rect.Height * 0.5f + nonShadowGlyph.yOffset), c, true);
 			}

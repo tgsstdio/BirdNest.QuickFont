@@ -83,6 +83,9 @@
     <Compile Include="TexturePage.cs" />
     <Compile Include="QVertexBuffer.cs" />
     <Compile Include="IFont.cs" />
+    <Compile Include="QFontDataInformation.cs" />
+    <Compile Include="IQFontLoader.cs" />
+    <Compile Include="QFontFileLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ChangeLog.txt" />

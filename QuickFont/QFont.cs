@@ -5,18 +5,19 @@ using System.Drawing.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Graphics;
+using System.IO;
 
 namespace QuickFont
 {
-	public class QFont : IFont<QFont>
+	public class QFont : IFont
     {
         //private QFontRenderOptions options = new QFontRenderOptions();
         private Stack<QFontRenderOptions> optionsStack = new Stack<QFontRenderOptions>();
-		internal QFontData<QFont> fontData;
+		internal QFontData fontData;
 
 		#region IFont implementation
 
-		public void SetData (QFontData<QFont> data)
+		public void SetData (QFontData data)
 		{
 			fontData = data;
 		}
@@ -49,7 +50,7 @@ namespace QuickFont
         #region Constructors and font builders
 
         public QFont() { }
-		internal QFont(QFontData<QFont> fontData) { this.fontData = fontData; }
+		internal QFont(QFontData fontData) { this.fontData = fontData; }
         public QFont(Font font) : this(font, null) { }
         public QFont(Font font, QFontBuilderConfiguration config)
         {
@@ -59,7 +60,9 @@ namespace QuickFont
             if (config == null)
                 config = new QFontBuilderConfiguration();
 
-            fontData = BuildFont(font, config, null);
+			QFont dropShadowFont;
+			fontData = BuildFont(font, config, null, out dropShadowFont);
+			DropShadow = dropShadowFont;
 
             if (config.ShadowConfig != null)
                 Options.DropShadowActive = true;
@@ -89,10 +92,12 @@ namespace QuickFont
             TransformViewport? transToVp = null;
             float fontScale = 1f;
             if (config.TransformToCurrentOrthogProjection)
-                transToVp = OrthogonalTransform(out fontScale);
+                transToVp = QFont.OrthogonalTransform(out fontScale);
 
             using(var font = new Font(fontFamily, size * fontScale * config.SuperSampleLevels, style)){
-                fontData = BuildFont(font, config, null);
+				QFont dropShadowFont;
+				fontData = BuildFont(font, config, null, out dropShadowFont);
+				DropShadow = dropShadowFont;
             }
 
             if (config.ShadowConfig != null)
@@ -108,14 +113,32 @@ namespace QuickFont
         public static void CreateTextureFontFiles(Font font, string newFontName) { CreateTextureFontFiles(font, null); }
         public static void CreateTextureFontFiles(Font font, string newFontName, QFontBuilderConfiguration config)
         {
-            var fontData = BuildFont(font, config, newFontName);
+			QFont dropShadowFont;
+			var fontData = BuildFont(font, config, newFontName, out dropShadowFont);
 
-			Helper.SaveQFontDataToFile<QFont>(fontData, newFontName);
+			Helper.SaveQFontDataToFile(fontData, newFontName);
         }
 
-        
+		const string ORTHOGONAL_ERROR = "Current projection matrix was not Orthogonal. Please ensure that you have set an orthogonal projection before attempting to create a font with the TransformToOrthogProjection flag set to true.";
 
+		/// <summary>
+		/// When TransformToOrthogProjection is enabled, we need to get the current orthogonal transformation,
+		/// the font scale, and ensure that the projection is actually orthogonal
+		/// </summary>
+		/// <param name="fontScale"></param>
+		public static TransformViewport OrthogonalTransform(out float fontScale)
+		{
+			bool isOrthog;
+			float left,right,bottom,top;
+			ProjectionStack.GetCurrentOrthogProjection(out isOrthog,out left,out right,out bottom,out top);
 
+			if (!isOrthog)
+				throw new ArgumentOutOfRangeException(ORTHOGONAL_ERROR);
+
+			var viewportTransform = new TransformViewport(left, top, right - left, bottom - top);
+			fontScale = Math.Abs((float)ProjectionStack.CurrentViewport.Value.Height / viewportTransform.Height);
+			return viewportTransform;
+		}     
 
         public static void CreateTextureFontFiles(string fileName, float size, string newFontName) { CreateTextureFontFiles(fileName, size, FontStyle.Regular, null, newFontName); }
         public static void CreateTextureFontFiles(string fileName, float size, FontStyle style, string newFontName) { CreateTextureFontFiles(fileName, size, style, null, newFontName); }
@@ -129,82 +152,30 @@ namespace QuickFont
             if (!fontFamily.IsStyleAvailable(style))
                 throw new ArgumentException("Font file: " + fileName + " does not support style: " + style);
 
-			QFontData<QFont> fontData = null;
+			QFontData fontData = null;
             if (config == null)
                 config = new QFontBuilderConfiguration();
 
 
             using(var font = new Font(fontFamily, size * config.SuperSampleLevels, style)){
-                fontData  = BuildFont(font, config, newFontName);
+				// unused 
+				QFont dropShadowFont;
+				fontData  = BuildFont(font, config, newFontName, out dropShadowFont);
             }
 
-			Helper.SaveQFontDataToFile<QFont>(fontData, newFontName);
+			Helper.SaveQFontDataToFile(fontData, newFontName);
             
         }
 
-        public static QFont FromQFontFile(string filePath) { return FromQFontFile(filePath, 1.0f, null); }
-        public static QFont FromQFontFile(string filePath, QFontLoaderConfiguration loaderConfig) { return FromQFontFile(filePath, 1.0f, loaderConfig); }
-        public static QFont FromQFontFile(string filePath, float downSampleFactor) { return FromQFontFile(filePath, downSampleFactor,null); }
-        public static QFont FromQFontFile(string filePath, float downSampleFactor, QFontLoaderConfiguration loaderConfig)
-        {
+		public QFont DropShadow;
+ 
+		private static QFontData BuildFont(Font font, QFontBuilderConfiguration config, string saveName, out QFont dropShadowFont){
 
-
-
-            if (loaderConfig == null)
-                loaderConfig = new QFontLoaderConfiguration();
-
-            TransformViewport? transToVp = null;
-            float fontScale = 1f;
-            if (loaderConfig.TransformToCurrentOrthogProjection)
-                transToVp = OrthogonalTransform(out fontScale);
-          
-            QFont qfont = new QFont();
-			qfont.fontData = Helper.LoadQFontDataFromFile<QFont>(filePath, downSampleFactor * fontScale, loaderConfig);
-
-            if (loaderConfig.ShadowConfig != null)
-                qfont.Options.DropShadowActive = true;
-            if (transToVp != null)
-                qfont.Options.TransformToViewport = transToVp;
-
-            return qfont;
+			var builder = new Builder<QFont>(font, config);
+			return builder.BuildFontData(saveName, out dropShadowFont);
         }
-  
-		private static QFontData<QFont> BuildFont(Font font, QFontBuilderConfiguration config, string saveName){
-
-			var builder = new Builder<QFont, QFontData<QFont>>(font, config);
-            return builder.BuildFontData(saveName);
-        }
-
-
 
         #endregion
-
-
-
-
-        /// <summary>
-        /// When TransformToOrthogProjection is enabled, we need to get the current orthogonal transformation,
-        /// the font scale, and ensure that the projection is actually orthogonal
-        /// </summary>
-        /// <param name="fontScale"></param>
-        /// <param name="viewportTransform"></param>
-        private static TransformViewport OrthogonalTransform(out float fontScale)
-        {
-            bool isOrthog;
-            float left,right,bottom,top;
-            ProjectionStack.GetCurrentOrthogProjection(out isOrthog,out left,out right,out bottom,out top);
-
-            if (!isOrthog)
-                throw new ArgumentOutOfRangeException("Current projection matrix was not Orthogonal. Please ensure that you have set an orthogonal projection before attempting to create a font with the TransformToOrthogProjection flag set to true.");
-            
-            var viewportTransform = new TransformViewport(left, top, right - left, bottom - top);
-            fontScale = Math.Abs((float)ProjectionStack.CurrentViewport.Value.Height / viewportTransform.Height);
-            return viewportTransform;
-        }
-
-
-
-
 
         /// <summary>
         /// Pushes the specified QFont options onto the options stack
@@ -259,13 +230,13 @@ namespace QuickFont
         private void RenderDropShadow(float x, float y, char c, QFontGlyph nonShadowGlyph)
         {
             //note can cast drop shadow offset to int, but then you can't move the shadow smoothly...
-            if (fontData.dropShadow != null && Options.DropShadowActive)
+            if (DropShadow != null && Options.DropShadowActive)
             {
                 //make sure fontdata font's options are synced with the actual options
-                if (fontData.dropShadow.Options != Options)
-                    fontData.dropShadow.Options = Options;
+				if (DropShadow.Options != Options)
+					DropShadow.Options = Options;
 
-                fontData.dropShadow.RenderGlyph(
+				DropShadow.RenderGlyph(
                     x + (fontData.meanGlyphWidth * Options.DropShadowOffset.X + nonShadowGlyph.rect.Width * 0.5f),
                     y + (fontData.meanGlyphWidth * Options.DropShadowOffset.Y + nonShadowGlyph.rect.Height * 0.5f + nonShadowGlyph.yOffset), c, true);
             }
@@ -445,7 +416,7 @@ namespace QuickFont
 
 
 
-        public void Print(ProcessedText<QFont> processedText, Vector2 position)
+        public void Print(ProcessedText processedText, Vector2 position)
         {
             position = TransformPositionToViewport(position);
             position = LockToPixel(position);
@@ -485,13 +456,13 @@ namespace QuickFont
 		/// <param name="text"></param>
 		/// <param name="bounds"></param>
 		/// <returns></returns>
-		public ProcessedText<QFont> ProcessText(string text, float maxWidth, QFontAlignment alignment)
+		public ProcessedText ProcessText(string text, float maxWidth, QFontAlignment alignment)
 		{
 			//TODO: bring justify and alignment calculations in here
 
 			maxWidth = TransformWidthToViewport(maxWidth);
 
-			var nodeList = new TextNodeList<QFont>(text);
+			var nodeList = new TextNodeList(text);
 			nodeList.MeasureNodes(fontData, Options);
 
 			//we "crumble" words that are two long so that that can be split up
@@ -507,7 +478,7 @@ namespace QuickFont
 			nodeList.MeasureNodes(fontData, Options);
 
 
-			var processedText = new ProcessedText<QFont>();
+			var processedText = new ProcessedText();
 			processedText.textNodeList = nodeList;
 			processedText.maxWidth = maxWidth;
 			processedText.alignment = alignment;
@@ -592,7 +563,7 @@ namespace QuickFont
         /// </summary>
         /// <param name="processedText"></param>
         /// <returns></returns>
-		public SizeF Measure(ProcessedText<QFont> processedText)
+		public SizeF Measure(ProcessedText processedText)
         {
             return TransformMeasureFromViewport(PrintOrMeasure(processedText, true));
         }
@@ -1086,13 +1057,13 @@ namespace QuickFont
 		/// <param name = "maxSize"></param>
 		/// <param name = "alignment"></param>
         /// <returns></returns>
-		public ProcessedText<QFont> ProcessText(string text, Box2 maxSize, QFontAlignment alignment)
+		public ProcessedText ProcessText(string text, Box2 maxSize, QFontAlignment alignment)
         {
             //TODO: bring justify and alignment calculations in here
 
 			var width = TransformWidthToViewport(maxSize.Width);
 
-			var nodeList = new TextNodeList<QFont>(text);
+			var nodeList = new TextNodeList(text);
             nodeList.MeasureNodes(fontData, Options);
 
             //we "crumble" words that are two long so that that can be split up
@@ -1108,7 +1079,7 @@ namespace QuickFont
             nodeList.MeasureNodes(fontData, Options);
 
 
-			var processedText = new ProcessedText<QFont>();
+			var processedText = new ProcessedText();
             processedText.textNodeList = nodeList;
 			processedText.maxWidth = width;
             processedText.alignment = alignment;
@@ -1124,7 +1095,7 @@ namespace QuickFont
         /// Prints text as previously processed with a boundary and alignment.
         /// </summary>
         /// <param name="processedText"></param>
-		public void Print(ProcessedText<QFont> processedText)
+		public void Print(ProcessedText processedText)
         {
             PrintOrMeasure(processedText, false);
         }
@@ -1143,7 +1114,7 @@ namespace QuickFont
 		}
 
 
-		private SizeF PrintOrMeasure(ProcessedText<QFont> processedText, bool measureOnly)
+		private SizeF PrintOrMeasure(ProcessedText processedText, bool measureOnly)
         {
             // init values we'll return
             float maxMeasuredWidth = 0f;

@@ -221,7 +221,8 @@ namespace StarterKit
             QFont.CreateTextureFontFiles("BURNSTOW.TTF", 120, config, "metalFont");
             */
 
-            heading2 = QFont.FromQFontFile("woodenFont.qfont", 1.0f, new QFontLoaderConfiguration(true));
+			var fileLoader = new QFontFileLoader ();
+			heading2 = fileLoader.Load("woodenFont.qfont", 1.0f, new QFontLoaderConfiguration(true));
 
             var builderConfig = new QFontBuilderConfiguration(true);
             builderConfig.ShadowConfig.blurRadius = 1; //reduce blur radius because font is very small

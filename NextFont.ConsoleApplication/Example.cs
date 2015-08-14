@@ -216,7 +216,8 @@ namespace NextFont.ConsoleApplication
 
 			var screenMatrix = Matrix4.CreateOrthographicOffCenter(ClientRectangle.X, Width, Height, ClientRectangle.Y, -1, 1);
 
-			heading2 = NxFont.FromQFontFile("woodenFont.qfont", Height, 1.0f, new NxFontLoaderConfiguration(screenMatrix, true));
+			var fontFileLoader = new NxFontFileLoader ();
+			heading2 = fontFileLoader.Load("woodenFont.qfont", Height, 1.0f, new NxFontLoaderConfiguration(screenMatrix, true));
 
 			var builderConfig = new NxFontBuilderConfiguration(screenMatrix, true);
 			builderConfig.ShadowConfig.blurRadius = 1; //reduce blur radius because font is very small
