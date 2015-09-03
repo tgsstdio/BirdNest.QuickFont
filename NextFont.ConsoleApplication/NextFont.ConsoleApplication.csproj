@@ -42,6 +42,13 @@
     <Compile Include="Example.cs" />
     <Compile Include="ShaderManager.cs" />
     <Compile Include="DrawElementsIndirectCommand.cs" />
+    <Compile Include="IVertexAttributeBinding.cs" />
+    <Compile Include="IntAttributeBinding.cs" />
+    <Compile Include="FloatAttributeBinding.cs" />
+    <Compile Include="VertexBuffer.cs" />
+    <Compile Include="BindlessTextureHandle.cs" />
+    <Compile Include="SentanceBlock.cs" />
+    <Compile Include="SentanceBlockStorageBuffer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -53,6 +60,12 @@
     </Content>
     <Content Include="Shaders\multi-draw-indirect.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\BindlessTex.frag">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Shaders\BindlessTex.vert">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

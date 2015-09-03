@@ -39,6 +39,7 @@ namespace NextFont
 			foreach (var bitmapFileName in bitmapFiles)
 			{
 				// TODO : STREAM BASED REPLACEMENT 
+				// https://support.microsoft.com/en-us/kb/814675
 				// GDI+ require the bitmap files to be locked as indexed image
 				// during the lifetime i.e. maybe reloaded from disk				
 				//using (var fs = File.OpenRead (bitmapFileName))
