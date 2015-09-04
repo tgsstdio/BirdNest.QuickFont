@@ -86,6 +86,8 @@
     <Compile Include="QFontDataInformation.cs" />
     <Compile Include="IQFontLoader.cs" />
     <Compile Include="QFontFileLoader.cs" />
+    <Compile Include="IQBitmap.cs" />
+    <Compile Include="IQBitmapOperations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="ChangeLog.txt" />

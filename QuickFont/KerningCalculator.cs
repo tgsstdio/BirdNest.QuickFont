@@ -54,7 +54,8 @@ namespace QuickFont
             return worstCase;
         }
 
-        public static Dictionary<String, int> CalculateKerning(char[] charSet, QFontGlyph[] glyphs, List<QBitmap> bitmapPages, QFontKerningConfiguration config)
+		public static Dictionary<String, int> CalculateKerning<TBitmap>(char[] charSet, QFontGlyph[] glyphs, List<TBitmap> bitmapPages, QFontKerningConfiguration config)
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()
         {
             var kerningPairs = new Dictionary<String, int>();
 
@@ -84,7 +85,7 @@ namespace QuickFont
                     bool yetToFindFirst = true;
                     for (int i = xStart; i < xEnd; i++)
                     {
-                        if (!QBitmap.EmptyAlphaPixel(page.bitmapData, i, j,config.alphaEmptyPixelTolerance))
+						if (!page.IsEmptyAlphaPixel(i, j,config.alphaEmptyPixelTolerance))
                         {
 
                             if (yetToFindFirst)

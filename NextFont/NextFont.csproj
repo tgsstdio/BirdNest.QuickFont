@@ -51,6 +51,7 @@
     <Compile Include="BufferedGlyphRenderer.cs" />
     <Compile Include="INxFontLoader.cs" />
     <Compile Include="NxFontFileLoader.cs" />
+    <Compile Include="NxBitmap.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

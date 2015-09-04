@@ -187,21 +187,25 @@ namespace QuickFont
             
         }
 
-		private static void CreateBitmapPerGlyph(QFontGlyph[] sourceGlyphs, QBitmap[] sourceBitmaps, out QFontGlyph[]  destGlyphs, out QBitmap[] destBitmaps){
-			destBitmaps = new QBitmap[sourceGlyphs.Length];
+		private static void CreateBitmapPerGlyph<TBitmap>(QFontGlyph[] sourceGlyphs, TBitmap[] sourceBitmaps, out QFontGlyph[]  destGlyphs, out TBitmap[] destBitmaps)
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()
+		{
+			destBitmaps = new TBitmap[sourceGlyphs.Length];
 			destGlyphs = new QFontGlyph[sourceGlyphs.Length];
 			for(int i = 0; i < sourceGlyphs.Length; i++){
 				var sg = sourceGlyphs[i];
 				destGlyphs[i] = new QFontGlyph(i,new Rectangle(0,0,sg.rect.Width,sg.rect.Height),sg.yOffset,sg.character);
-				destBitmaps[i] = new QBitmap(new Bitmap(sg.rect.Width,sg.rect.Height,System.Drawing.Imaging.PixelFormat.Format32bppArgb));
-				QBitmap.Blit(sourceBitmaps[sg.page].bitmapData,destBitmaps[i].bitmapData,sg.rect,0,0);
+				destBitmaps[i] = new TBitmap();
+				destBitmaps[i].InitialiseBlankImage (sg.rect.Width, sg.rect.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+				destBitmaps[i].Blit(sourceBitmaps[sg.page],sg.rect,0,0);
 			}
 		}
 
-		public List<QFontGlyph> InitialiseQFontData(QFontDataInformation fontInfo, ref List<QBitmap> bitmapPages, float downSampleFactor, QFontLoaderConfiguration loaderConfig)
+		public List<QFontGlyph> InitialiseQFontData<TBitmap>(QFontDataInformation fontInfo, ref List<TBitmap> bitmapPages, float downSampleFactor, QFontLoaderConfiguration loaderConfig)
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()
 		{
 			foreach (var glyph in CharSetMapping.Values)
-				Helper.RetargetGlyphRectangleOutwards(bitmapPages[glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
+				bitmapPages[glyph.page].RetargetGlyphRectangleOutwards(glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
 
 			var intercept = Helper.FirstIntercept(CharSetMapping);
 			if (intercept != null)
@@ -214,7 +218,7 @@ namespace QuickFont
 			if (downSampleFactor > 1.0f)
 			{
 				foreach (var page in bitmapPages)
-					page.DownScale32((int)(page.bitmap.Width * downSampleFactor), (int)(page.bitmap.Height * downSampleFactor));
+					page.DownScale32((int)(page.Width * downSampleFactor), (int)(page.Height * downSampleFactor));
 
 				foreach (var glyph in CharSetMapping.Values)
 				{
@@ -231,33 +235,28 @@ namespace QuickFont
 				// If we were simply to shrink the entire texture, then at some point we will make glyphs overlap, breaking the font.
 				// For this reason it is necessary to copy every glyph to a separate bitmap, and then shrink each bitmap individually.
 				QFontGlyph[] shrunkGlyphs;
-				QBitmap[] shrunkBitmapsPerGlyph;
-				CreateBitmapPerGlyph(Helper.ToArray(CharSetMapping.Values), bitmapPages.ToArray(), out shrunkGlyphs, out shrunkBitmapsPerGlyph);
+				TBitmap[] shrunkBitmapsPerGlyph;
+				CreateBitmapPerGlyph<TBitmap>(Helper.ToArray(CharSetMapping.Values), bitmapPages.ToArray(), out shrunkGlyphs, out shrunkBitmapsPerGlyph);
 
 				//shrink each bitmap
 				for (int i = 0; i < shrunkGlyphs.Length; i++)
 				{   
 					var bmp = shrunkBitmapsPerGlyph[i];
-					bmp.DownScale32(Math.Max((int)(bmp.bitmap.Width * downSampleFactor),1), Math.Max((int)(bmp.bitmap.Height * downSampleFactor),1));
-					shrunkGlyphs[i].rect = new Rectangle(0, 0, bmp.bitmap.Width, bmp.bitmap.Height);
+					bmp.DownScale32(Math.Max((int)(bmp.Width * downSampleFactor),1), Math.Max((int)(bmp.Height * downSampleFactor),1));
+					shrunkGlyphs[i].rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
 					shrunkGlyphs[i].yOffset = (int)(shrunkGlyphs[i].yOffset * downSampleFactor);
 				}
 
-				var shrunkBitmapData = new BitmapData[shrunkBitmapsPerGlyph.Length];
-				for(int i = 0; i < shrunkBitmapsPerGlyph.Length; i ++ ){
-					shrunkBitmapData[i] = shrunkBitmapsPerGlyph[i].bitmapData;
-				}
-
 				//use roughly the same number of pages as before..
-				int newWidth = (int)(bitmapPages[0].bitmap.Width * (0.1f + downSampleFactor));
-				int newHeight = (int)(bitmapPages[0].bitmap.Height * (0.1f + downSampleFactor));
+				int newWidth = (int)(bitmapPages[0].Width * (0.1f + downSampleFactor));
+				int newHeight = (int)(bitmapPages[0].Height * (0.1f + downSampleFactor));
 
 				//free old bitmap pages since we are about to chuck them away
 				for (int i = 0; i < localPageCount; i++)
 					bitmapPages[i].Free();
 
 				QFontGlyph[] shrunkRepackedGlyphs;
-				bitmapPages = Helper.GenerateBitmapSheetsAndRepack(shrunkGlyphs, shrunkBitmapData, newWidth, newHeight, out shrunkRepackedGlyphs, 4, false);
+				bitmapPages = Helper.GenerateBitmapSheetsAndRepack<TBitmap>(shrunkGlyphs, shrunkBitmapsPerGlyph, newWidth, newHeight, out shrunkRepackedGlyphs, 4, false);
 				CharSetMapping = Helper.CreateCharGlyphMapping(shrunkRepackedGlyphs);
 
 				foreach (var bmp in shrunkBitmapsPerGlyph)
@@ -268,13 +267,13 @@ namespace QuickFont
 
 			Pages = new TexturePage[localPageCount];
 			for(int i = 0; i < localPageCount; i ++ )
-				Pages[i] = new TexturePage(bitmapPages[i].bitmapData);
+				Pages[i] = new TexturePage(bitmapPages[i].GetBitmapData());
 
 
 			if (Math.Abs (downSampleFactor - 1.0f) > float.Epsilon)
 			{
 				foreach (var glyph in CharSetMapping.Values)
-					Helper.RetargetGlyphRectangleOutwards (bitmapPages [glyph.page].bitmapData, glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
+					bitmapPages [glyph.page].RetargetGlyphRectangleOutwards (glyph, false, loaderConfig.KerningConfig.alphaEmptyPixelTolerance);
 
 
 				intercept = Helper.FirstIntercept (CharSetMapping);
@@ -292,7 +291,8 @@ namespace QuickFont
 			return glyphList;
 		}
 
-		public void InitialiseKerningPairs(QFontDataInformation fontInfo, List<QBitmap> bitmapPages, List<QFontGlyph> glyphList, QFontLoaderConfiguration loaderConfig)
+		public void InitialiseKerningPairs<TBitmap>(QFontDataInformation fontInfo, List<TBitmap> bitmapPages, List<QFontGlyph> glyphList, QFontLoaderConfiguration loaderConfig)
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()
 		{
 			KerningPairs = KerningCalculator.CalculateKerning(Helper.ToArray(fontInfo.CharSet), glyphList.ToArray(), bitmapPages, loaderConfig.KerningConfig);
 

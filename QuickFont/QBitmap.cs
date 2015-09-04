@@ -4,11 +4,15 @@ using System.Drawing.Imaging;
 
 namespace QuickFont
 {
-    public class QBitmap
+	public class QBitmap : IQBitmap, IQBitmapOperations<QBitmap>
     {
         public Bitmap bitmap;
         public BitmapData bitmapData;
 
+		public BitmapData GetBitmapData ()
+		{
+			return bitmapData;
+		}
 
         public QBitmap(string filePath)
         {
@@ -27,7 +31,16 @@ namespace QuickFont
             bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
         }
 
+		public QBitmap()
+		{
 
+		}
+
+		public void InitialiseBlankImage (int width, int height, PixelFormat format)
+		{
+			bitmap = new Bitmap (width, height, format);
+			LockBits(bitmap);
+		}
 
         public void Clear32(byte r, byte g, byte b, byte a)
         {
@@ -51,8 +64,25 @@ namespace QuickFont
             }
         }
 
+		public int Width {
+			get
+			{
+				return bitmap.Width;
+			}				
+		}
 
+		public int Height {
+			get
+			{
+				return bitmap.Height;
+			}
+		}
 
+		public PixelFormat Format {
+			get {
+				return bitmapData.PixelFormat;
+			}
+		}
 
         /// <summary>
         /// Returns try if the given pixel is empty (i.e. black)
@@ -65,16 +95,160 @@ namespace QuickFont
 
         }
 
+		public bool IsEmptyAlphaPixel(int px, int py, byte alphaEmptyPixelTolerance)
+		{
+			unsafe
+			{
+				return EmptyAlphaPixel (bitmapData, px, py, alphaEmptyPixelTolerance);
+			}
+		}
+
         /// <summary>
         /// Returns try if the given pixel is empty (i.e. alpha is zero)
         /// </summary>
         public static unsafe bool EmptyAlphaPixel(BitmapData bitmapData, int px, int py, byte alphaEmptyPixelTolerance)
         {
-
             byte* addr = (byte*)(bitmapData.Scan0) + bitmapData.Stride * py + px * 4;
             return (*(addr + 3) <= alphaEmptyPixelTolerance);
-
         }
+
+		private delegate bool EmptyDel(BitmapData data, int x, int y);
+
+		public void RetargetGlyphRectangleOutwards (QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
+		{
+			int startX,endX;
+			int startY,endY;
+
+			var rect = glyph.rect;
+
+			EmptyDel emptyPix;
+
+			if (bitmapData.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
+				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyAlphaPixel(data, x, y, alphaTolerance); };
+			else
+				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyPixel(data, x, y); };
+
+
+			unsafe
+			{
+
+				for (startX = rect.X; startX >= 0; startX--)
+				{
+					bool foundPix = false;
+					for (int j = rect.Y; j <= rect.Y + rect.Height; j++)
+					{
+						if (!emptyPix(bitmapData, startX, j))
+						{
+							foundPix = true;
+							break;
+						}
+					}
+
+					if (!foundPix)
+					{
+						startX++;
+						break;
+					}
+				}
+
+
+				for (endX = rect.X + rect.Width; endX < bitmapData.Width; endX++)
+				{
+					bool foundPix = false;
+					for (int j = rect.Y; j <= rect.Y + rect.Height; j++)
+					{
+						if (!emptyPix(bitmapData, endX, j))
+						{
+							foundPix = true;
+							break; 
+						}
+					}
+
+					if (!foundPix)
+					{
+						endX--;
+						break;
+					}
+				}
+
+
+
+				for (startY = rect.Y; startY >= 0; startY--)
+				{
+					bool foundPix = false;
+					for (int i = startX; i <= endX; i++)
+					{
+						if (!emptyPix(bitmapData, i, startY))
+						{
+							foundPix = true;
+							break;
+						}
+					}
+
+					if (!foundPix)
+					{
+						startY++;
+						break;
+					}
+				}
+
+
+
+				for (endY = rect.Y + rect.Height; endY < bitmapData.Height; endY++)
+				{
+					bool foundPix = false;
+					for (int i = startX; i <= endX; i++)
+					{
+						if (!emptyPix(bitmapData, i, endY))
+						{
+							foundPix = true;
+							break;
+						}
+					}
+
+					if (!foundPix)
+					{
+						endY--;
+						break;
+					}
+				}
+
+
+
+			}
+
+
+
+			glyph.rect = new Rectangle(startX, startY, endX - startX + 1, endY - startY + 1);
+
+			if (setYOffset)
+				glyph.yOffset = glyph.rect.Y;
+
+		}
+
+		#region IQBitmapOperations implementation
+
+		public void Blit (QBitmap source, Rectangle sourceRect, int px, int py)
+		{
+			Blit(source.bitmapData, this.bitmapData, sourceRect, px, py);
+		}
+
+		public void BlitMask (QBitmap source, int srcPx, int srcPy, int srcW, int srcH, int px, int py)
+		{
+			BlitMask(source.bitmapData, this.bitmapData, srcPx, srcPy, srcW, srcH, px, py);
+		}
+
+		public void Blit (QBitmap source, int srcPx, int srcPy, int srcW, int srcH, int destX, int destY)
+		{
+			Blit(source.bitmapData, this.bitmapData, srcPx, srcPy, srcW, srcH, destX, destY);
+		}
+
+		#endregion
+
+		public void Save (string fileName, ImageFormat format)
+		{
+			bitmap.Save (fileName, format);
+		}
 
         /// <summary>
         /// Blits a block of a bitmap data from source to destination, using the luminance of the source to determine the 
@@ -146,7 +320,7 @@ namespace QuickFont
         /// <summary>
         /// Blits from source to target. Both source and target must be 32-bit
         /// </summary>
-        public static void Blit(BitmapData source, BitmapData target, Rectangle sourceRect, int px, int py)
+        private void Blit(BitmapData source, BitmapData target, Rectangle sourceRect, int px, int py)
         {
             Blit(source, target, sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height, px, py);
         }
@@ -154,7 +328,7 @@ namespace QuickFont
         /// <summary>
         /// Blits from source to target. Both source and target must be 32-bit
         /// </summary>
-        public static void Blit(BitmapData source, BitmapData target, int srcPx, int srcPy, int srcW, int srcH, int destX, int destY)
+        private void Blit(BitmapData source, BitmapData target, int srcPx, int srcPy, int srcW, int srcH, int destX, int destY)
         {
 
             int bpp = 4;
@@ -537,16 +711,15 @@ namespace QuickFont
 
         }
 
-
-
-
-
-
         public void Free()
         {
             bitmap.UnlockBits(bitmapData);
             bitmap.Dispose();
         }
 
+		public void Dispose()
+		{
+
+		}
     }
 }

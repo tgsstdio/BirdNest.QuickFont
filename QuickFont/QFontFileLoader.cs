@@ -58,7 +58,7 @@ namespace QuickFont
 
 			if (loaderConfig.ShadowConfig != null)
 			{
-				qfont.DropShadow = Helper.BuildDropShadow<QFont> (
+				qfont.DropShadow = Helper.BuildDropShadow<QFont, QBitmap> (
 					bitmapPages,
 					glyphList.ToArray (),
 					loaderConfig.ShadowConfig,

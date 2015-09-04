@@ -98,120 +98,6 @@ namespace QuickFont
 
 		}
 
-		private delegate bool EmptyDel(BitmapData data, int x, int y);
-
-		public static void RetargetGlyphRectangleOutwards(BitmapData bitmapData, QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
-		{
-			int startX,endX;
-			int startY,endY;
-
-			var rect = glyph.rect;
-
-			EmptyDel emptyPix;
-
-			if (bitmapData.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
-				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyAlphaPixel(data, x, y, alphaTolerance); };
-			else
-				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyPixel(data, x, y); };
-
-
-			unsafe
-			{
-
-				for (startX = rect.X; startX >= 0; startX--)
-				{
-					bool foundPix = false;
-					for (int j = rect.Y; j <= rect.Y + rect.Height; j++)
-					{
-						if (!emptyPix(bitmapData, startX, j))
-						{
-							foundPix = true;
-							break;
-						}
-					}
-
-					if (!foundPix)
-					{
-						startX++;
-						break;
-					}
-				}
-
-
-				for (endX = rect.X + rect.Width; endX < bitmapData.Width; endX++)
-				{
-					bool foundPix = false;
-					for (int j = rect.Y; j <= rect.Y + rect.Height; j++)
-					{
-						if (!emptyPix(bitmapData, endX, j))
-						{
-							foundPix = true;
-							break; 
-						}
-					}
-
-					if (!foundPix)
-					{
-						endX--;
-						break;
-					}
-				}
-
-
-
-				for (startY = rect.Y; startY >= 0; startY--)
-				{
-					bool foundPix = false;
-					for (int i = startX; i <= endX; i++)
-					{
-						if (!emptyPix(bitmapData, i, startY))
-						{
-							foundPix = true;
-							break;
-						}
-					}
-
-					if (!foundPix)
-					{
-						startY++;
-						break;
-					}
-				}
-
-
-
-				for (endY = rect.Y + rect.Height; endY < bitmapData.Height; endY++)
-				{
-					bool foundPix = false;
-					for (int i = startX; i <= endX; i++)
-					{
-						if (!emptyPix(bitmapData, i, endY))
-						{
-							foundPix = true;
-							break;
-						}
-					}
-
-					if (!foundPix)
-					{
-						endY--;
-						break;
-					}
-				}
-
-
-
-			}
-
-
-
-			glyph.rect = new Rectangle(startX, startY, endX - startX + 1, endY - startY + 1);
-
-			if (setYOffset)
-				glyph.yOffset = glyph.rect.Y;
-
-		}
-
 		private static bool RectangleIntersect(Rectangle r1, Rectangle r2)
 		{
 			return (r1.X < r2.X + r2.Width && r1.X + r1.Width > r2.X &&
@@ -267,12 +153,13 @@ namespace QuickFont
 			return bitmapPages;
 		}
 
-		public static List<QBitmap> GenerateBitmapSheetsAndRepack(QFontGlyph[] sourceGlyphs, BitmapData[] sourceBitmaps, int destSheetWidth, int destSheetHeight, out QFontGlyph[] destGlyphs, int destMargin, bool usePowerOfTwo)
+		public static List<TBitmap> GenerateBitmapSheetsAndRepack<TBitmap>(QFontGlyph[] sourceGlyphs, TBitmap[] sourceBitmaps, int destSheetWidth, int destSheetHeight, out QFontGlyph[] destGlyphs, int destMargin, bool usePowerOfTwo)
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()
 		{
-			var pages = new List<QBitmap>();
+			var pages = new List<TBitmap>();
 			destGlyphs = new QFontGlyph[sourceGlyphs.Length];
 
-			QBitmap currentPage = null;
+			TBitmap currentPage = null;
 
 
 			int maxY = 0;
@@ -306,12 +193,14 @@ namespace QuickFont
 							int width = Math.Min(destSheetWidth, usePowerOfTwo ? PowerOfTwo(finalPageRequiredWidth) : finalPageRequiredWidth);
 							int height = Math.Min(destSheetHeight, usePowerOfTwo ? PowerOfTwo(finalPageRequiredHeight) : finalPageRequiredHeight);
 
-							currentPage = new QBitmap(new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb));
+							currentPage = new TBitmap();
+							currentPage.InitialiseBlankImage (width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 							currentPage.Clear32(255, 255, 255, 0); //clear to white, but totally transparent
 						}
 						else
 						{
-							currentPage = new QBitmap(new Bitmap(destSheetWidth, destSheetHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb));
+							currentPage = new TBitmap();
+							currentPage.InitialiseBlankImage (destSheetWidth, destSheetHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 							currentPage.Clear32(255, 255, 255, 0); //clear to white, but totally transparent
 						}
 						pages.Add(currentPage);
@@ -333,10 +222,10 @@ namespace QuickFont
 						if (!pre)
 						{
 							//add to page
-							if(sourceBitmaps[sourceGlyphs[i].page].PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
-								QBitmap.Blit(sourceBitmaps[sourceGlyphs[i].page], currentPage.bitmapData, rect.X, rect.Y, rect.Width, rect.Height, xPos + destMargin, yPos + destMargin);
+							if(sourceBitmaps[sourceGlyphs[i].page].Format == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
+								currentPage.Blit(sourceBitmaps[sourceGlyphs[i].page], rect.X, rect.Y, rect.Width, rect.Height, xPos + destMargin, yPos + destMargin);
 							else
-								QBitmap.BlitMask(sourceBitmaps[sourceGlyphs[i].page], currentPage.bitmapData, rect.X, rect.Y, rect.Width, rect.Height, xPos + destMargin, yPos + destMargin);
+								currentPage.BlitMask(sourceBitmaps[sourceGlyphs[i].page], rect.X, rect.Y, rect.Width, rect.Height, xPos + destMargin, yPos + destMargin);
 
 							destGlyphs[i] = new QFontGlyph(pages.Count - 1, new Rectangle(xPos + destMargin, yPos + destMargin, rect.Width, rect.Height), sourceGlyphs[i].yOffset, sourceGlyphs[i].character);
 						}
@@ -398,10 +287,11 @@ namespace QuickFont
 			return dict;
 		}
 
-		public static void ScaleSheetsAndGlyphs(List<QBitmap> pages, QFontGlyph[] glyphs, float scale)
+		public static void ScaleSheetsAndGlyphs<TBitmap>(List<TBitmap> pages, QFontGlyph[] glyphs, float scale)
+			where TBitmap : class, IQBitmap, new()	
 		{
 			foreach (var page in pages)
-				page.DownScale32((int)(page.bitmap.Width * scale), (int)(page.bitmap.Height * scale));
+				page.DownScale32((int)(page.Width * scale), (int)(page.Height * scale));
 
 
 			foreach (var glyph in glyphs)
@@ -412,20 +302,16 @@ namespace QuickFont
 			}
 		}
 
-		public static TFont BuildDropShadow<TFont>(List<QBitmap> sourceFontSheets, QFontGlyph[] sourceFontGlyphs, QFontShadowConfiguration shadowConfig, char[] charSet, byte alphaTolerance)
+		public static TFont BuildDropShadow<TFont, TBitmap>(List<TBitmap> sourceFontSheets, QFontGlyph[] sourceFontGlyphs, QFontShadowConfiguration shadowConfig, char[] charSet, byte alphaTolerance)
 			where TFont : IFont, new()
+			where TBitmap : class, IQBitmap, IQBitmapOperations<TBitmap>, new()		
 		{
 
 			QFontGlyph[] newGlyphs;
 
-			var sourceBitmapData = new List<BitmapData>();
-			foreach(var sourceSheet in sourceFontSheets)
-				sourceBitmapData.Add(sourceSheet.bitmapData);
-
-
 			//GenerateBitmapSheetsAndRepack(QFontGlyph[] sourceGlyphs, BitmapData[] sourceBitmaps, int destSheetWidth, int destSheetHeight, out QFontGlyph[] destGlyphs, int destMargin, bool usePowerOfTwo)
 
-			var bitmapSheets = GenerateBitmapSheetsAndRepack(sourceFontGlyphs, sourceBitmapData.ToArray(), shadowConfig.PageWidth, shadowConfig.PageHeight, out newGlyphs, shadowConfig.GlyphMargin + shadowConfig.blurRadius*3, shadowConfig.ForcePowerOfTwo);
+			var bitmapSheets = GenerateBitmapSheetsAndRepack<TBitmap>(sourceFontGlyphs, sourceFontSheets.ToArray(), shadowConfig.PageWidth, shadowConfig.PageHeight, out newGlyphs, shadowConfig.GlyphMargin + shadowConfig.blurRadius*3, shadowConfig.ForcePowerOfTwo);
 
 			//scale up in case we wanted bigger/smaller shadows
 			if (Math.Abs (shadowConfig.Scale - 1.0f) > float.Epsilon)
@@ -444,12 +330,12 @@ namespace QuickFont
 
 
 			//retarget after blur and scale
-			RetargetAllGlyphs(bitmapSheets, newGlyphs, alphaTolerance);
+			RetargetAllGlyphs<TBitmap>(bitmapSheets, newGlyphs, alphaTolerance);
 
 			//create list of texture pages
 			var newTextureSheets = new List<TexturePage>();
 			foreach (var page in bitmapSheets)
-				newTextureSheets.Add(new TexturePage(page.bitmapData));
+				newTextureSheets.Add(new TexturePage(page.GetBitmapData()));
 
 
 			var fontData = new QFontData();
@@ -470,10 +356,11 @@ namespace QuickFont
 			return result;
 		}
 
-		public static void RetargetAllGlyphs(List<QBitmap> pages, QFontGlyph[] glyphs, byte alphaTolerance)
+		public static void RetargetAllGlyphs<TBitmap>(List<TBitmap> pages, QFontGlyph[] glyphs, byte alphaTolerance)
+			where TBitmap : class, IQBitmap, new()		
 		{
 			foreach (var glyph in glyphs)
-				RetargetGlyphRectangleOutwards(pages[glyph.page].bitmapData, glyph, false, alphaTolerance);
+				pages[glyph.page].RetargetGlyphRectangleOutwards(glyph, false, alphaTolerance);
 		}
 
 		/// <summary>
@@ -501,6 +388,8 @@ namespace QuickFont
 
 			return (int)val;
 		}
+
+		private delegate bool EmptyDel(BitmapData data, int x, int y);
 
 		public static void RetargetGlyphRectangleInwards(BitmapData bitmapData, QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
 		{

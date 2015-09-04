@@ -35,25 +35,24 @@ namespace NextFont
 			}
 			var bitmapFiles = fontInfo.GenerateBitmapPageNames (filePath);
 
-			var bitmapPages = new List<QBitmap> ();
+			var bitmapPages = new List<NxBitmap> ();
 			foreach (var bitmapFileName in bitmapFiles)
 			{
 				// TODO : STREAM BASED REPLACEMENT 
 				// https://support.microsoft.com/en-us/kb/814675
 				// GDI+ require the bitmap files to be locked as indexed image
 				// during the lifetime i.e. maybe reloaded from disk				
-				//using (var fs = File.OpenRead (bitmapFileName))
-				//using (var b = new Bitmap(fs))				
-			//	{
-					var qb = new QBitmap (bitmapFileName);
+				using (var fs = File.OpenRead (bitmapFileName))	
+				{
+					var qb = new NxBitmap (fs);
 					bitmapPages.Add (qb);
-			//	}
+				}
 			}
 			var glyphList = fontData.InitialiseQFontData (fontInfo, ref bitmapPages, downSampleFactor, internalConfig);
 
 			if (loaderConfig.ShadowConfig != null)
 			{
-				qfont.DropShadow = Helper.BuildDropShadow<NxFont> (
+				qfont.DropShadow = Helper.BuildDropShadow<NxFont, NxBitmap> (
 					bitmapPages,
 					glyphList.ToArray (),
 					loaderConfig.ShadowConfig,

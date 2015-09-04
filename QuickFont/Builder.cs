@@ -118,7 +118,7 @@ namespace QuickFont
         }*/
 
         //The initial bitmap is simply a long thin strip of all glyphs in a row
-        private Bitmap CreateInitialBitmap(Font font, SizeF maxSize, int initialMargin, out QFontGlyph[] glyphs, TextGenerationRenderHint renderHint)
+		private Bitmap CreateInitialBitmap(Font font, SizeF maxSize, int initialMargin, out QFontGlyph[] glyphs, TextGenerationRenderHint renderHint)
         {
             glyphs = new QFontGlyph[charSet.Length];
 
@@ -190,12 +190,12 @@ namespace QuickFont
             QFontGlyph[] initialGlyphs;
             var sizes = GetGlyphSizes(font);
             var maxSize = GetMaxGlyphSize(sizes);
-            var initialBmp = CreateInitialBitmap(font, maxSize, margin, out initialGlyphs,config.TextGenerationRenderHint);
+			var initialBmp = CreateInitialBitmap(font, maxSize, margin, out initialGlyphs,config.TextGenerationRenderHint);
             var initialBitmapData = initialBmp.LockBits(new Rectangle(0, 0, initialBmp.Width, initialBmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
 
             int minYOffset = int.MaxValue;
             foreach (var glyph in initialGlyphs){
-				Helper.RetargetGlyphRectangleInwards(initialBitmapData, glyph, true, config.KerningConfig.alphaEmptyPixelTolerance);
+				Helper.RetargetGlyphRectangleInwards (initialBitmapData, glyph, true, config.KerningConfig.alphaEmptyPixelTolerance);
                 minYOffset = Math.Min(minYOffset,glyph.yOffset);
             }
             minYOffset--; //give one pixel of breathing room?
@@ -205,7 +205,13 @@ namespace QuickFont
            
 
             QFontGlyph[] glyphs; 
-            var bitmapPages = Helper.GenerateBitmapSheetsAndRepack( initialGlyphs,new BitmapData[1] { initialBitmapData},pageWidth, pageHeight, out glyphs, glyphMargin, usePowerOfTwo);
+
+			// Override 
+			var imageHack = new QBitmap ();
+			imageHack.bitmap = initialBmp;
+			imageHack.bitmapData = initialBitmapData;
+
+			var bitmapPages = Helper.GenerateBitmapSheetsAndRepack<QBitmap>( initialGlyphs,new [] { imageHack},pageWidth, pageHeight, out glyphs, glyphMargin, usePowerOfTwo);
 
             initialBmp.UnlockBits(initialBitmapData);
             initialBmp.Dispose();
@@ -220,7 +226,7 @@ namespace QuickFont
             //create list of texture pages
             var pages = new List<TexturePage>();
             foreach (var page in bitmapPages)
-                pages.Add(new TexturePage(page.bitmapData));
+				pages.Add(new TexturePage(page.GetBitmapData()));
 
 			var fontData = new QFontData();
             fontData.CharSetMapping = Helper.CreateCharGlyphMapping(glyphs);
@@ -233,18 +239,18 @@ namespace QuickFont
             if (saveName != null)
             {
                 if (bitmapPages.Count == 1)
-                    bitmapPages[0].bitmap.Save(saveName + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    bitmapPages[0].Save(saveName + ".png", System.Drawing.Imaging.ImageFormat.Png);
                 else
                 {
                     for (int i = 0; i < bitmapPages.Count; i++)
-                        bitmapPages[i].bitmap.Save(saveName + "_sheet_" + i + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                        bitmapPages[i].Save(saveName + "_sheet_" + i + ".png", System.Drawing.Imaging.ImageFormat.Png);
                 }
             }
 
 
 			if (config.ShadowConfig != null)
 			{
-				dropShadowFont = Helper.BuildDropShadow<TFont> (bitmapPages, glyphs, config.ShadowConfig, charSet.ToCharArray (), config.KerningConfig.alphaEmptyPixelTolerance);
+				dropShadowFont = Helper.BuildDropShadow<TFont, QBitmap> (bitmapPages, glyphs, config.ShadowConfig, charSet.ToCharArray (), config.KerningConfig.alphaEmptyPixelTolerance);
 			}
 			else
 			{
