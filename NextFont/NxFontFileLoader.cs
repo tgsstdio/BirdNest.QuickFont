@@ -44,7 +44,13 @@ namespace NextFont
 				// during the lifetime i.e. maybe reloaded from disk				
 				using (var fs = File.OpenRead (bitmapFileName))	
 				{
-					var qb = new NxBitmap (fs);
+					var parent = new Bitmap (fs);
+					var data = parent.LockBits (
+							new Rectangle(0,0, parent.Width, parent.Height)
+							,System.Drawing.Imaging.ImageLockMode.ReadWrite
+							,parent.PixelFormat);
+					var target = new QBitmapData (data);
+					var qb = new NxBitmap (parent, target);
 					bitmapPages.Add (qb);
 				}
 			}

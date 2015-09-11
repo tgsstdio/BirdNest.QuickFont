@@ -401,9 +401,9 @@ namespace QuickFont
 			EmptyDel emptyPix;
 
 			if (bitmapData.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
-				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyAlphaPixel(data, x, y, alphaTolerance); };
+				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmapData.EmptyAlphaPixel(data, x, y, alphaTolerance); };
 			else
-				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmap.EmptyPixel(data, x, y); };
+				emptyPix = delegate(BitmapData data, int x, int y) { return QBitmapData.EmptyPixel(data, x, y); };
 
 
 			unsafe

@@ -1,53 +1,20 @@
-﻿<Properties StartupItem="Example\Example.csproj">
+﻿<Properties StartupItem="NextFont.ConsoleApplication\NextFont.ConsoleApplication.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont\NxFont.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont\NxFontFileLoader.cs">
     <Files>
+      <File FileName="QuickFont\Builder.cs" Line="1" Column="1" />
+      <File FileName="NextFont\NxBitmap.cs" Line="63" Column="47" />
+      <File FileName="QuickFont\QBitmap.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\IQBitmapOperations.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\IQBitmap.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\TexturePage.cs" Line="37" Column="20" />
       <File FileName="Example\Game.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\QFont.cs" Line="180" Column="22" />
-      <File FileName="QuickFont\QBitmap.cs" Line="115" Column="3" />
-      <File FileName="QuickFont\QFontGlyph.cs" Line="1" Column="1" />
-      <File FileName="NextFont\NxFont.cs" Line="799" Column="4" />
-      <File FileName="QuickFont\KerningCalculator.cs" Line="88" Column="35" />
-      <File FileName="QuickFont\Builder.cs" Line="260" Column="46" />
-      <File FileName="QuickFont\QFontRenderOptions.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\QVertexBuffer.cs" Line="87" Column="21" />
-      <File FileName="QuickFont\TexturePage.cs" Line="32" Column="57" />
-      <File FileName="QuickFont\QFontDataInformation.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\TextNodeList.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\IFont.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\QFontData.cs" Line="294" Column="90" />
-      <File FileName="QuickFont\Helper.cs" Line="314" Column="23" />
-      <File FileName="NextFont\BufferedGlyphRenderer.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\QFontFileLoader.cs" Line="61" Column="61" />
-      <File FileName="QuickFont\IQFontLoader.cs" Line="1" Column="1" />
-      <File FileName="NextFont\INxFontLoader.cs" Line="1" Column="1" />
-      <File FileName="NextFont\NxFontFileLoader.cs" Line="47" Column="25" />
-      <File FileName="NextFont\NxFontData.cs" Line="1" Column="1" />
-      <File FileName="Example\woodenFont.qfont" Line="1" Column="1" />
-      <File FileName="NextFont\IGlyphRenderer.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\ProjectionStack.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.frag" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.vert" Line="1" Column="1" />
-      <File FileName="NextFont\SentenceBlock.cs" Line="1" Column="1" />
-      <File FileName="NextFont\BindlessTextureHandle.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Program.cs" Line="1" Column="1" />
-      <File FileName="NextFont\TripleBufferLock.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\DrawElementsIndirectCommand.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\FloatAttributeBinding.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\VertexBuffer.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\IntAttributeBinding.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\IVertexAttributeBinding.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\ShaderManager.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\BindlessTextureHandle.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\SentanceBlock.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\SentanceBlockStorageBuffer.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\ChangeLog.txt" Line="1" Column="1" />
-      <File FileName="NextFont\NxBitmap.cs" Line="10" Column="4" />
-      <File FileName="QuickFont\IQBitmap.cs" Line="20" Column="30" />
-      <File FileName="QuickFont\IQBitmapOperations.cs" Line="10" Column="91" />
+      <File FileName="QuickFont\QVertexBuffer.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QFontData.cs" Line="1" Column="1" />
+      <File FileName="NextFont\NxFontFileLoader.cs" Line="53" Column="43" />
+      <File FileName="QuickFont\Helper.cs" Line="395" Column="4" />
+      <File FileName="QuickFont\QFont.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\QBitmapData.cs" Line="486" Column="24" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

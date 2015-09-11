@@ -1,5 +1,7 @@
 using QuickFont;
 using System.IO;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace NextFont
 {
@@ -10,96 +12,122 @@ namespace NextFont
 			
 		}
 
-		public NxBitmap (FileStream fs)
+		private QBitmapData mTarget;
+		private Bitmap mParent;
+		public NxBitmap (Bitmap parent, QBitmapData target)
 		{
-			throw new System.NotImplementedException ();
+			mParent = parent;
+			mTarget = target;
 		}
 
 		#region IQBitmapOperations implementation
 
 		public void Blit (NxBitmap source, System.Drawing.Rectangle sourceRect, int px, int py)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.Blit (source.GetBitmapData (), sourceRect, px, py);
 		}
 
 		public void Blit (NxBitmap source, int srcPx, int srcPy, int srcW, int srcH, int destX, int destY)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.Blit (source.GetBitmapData (), srcPx, srcPy, srcW, srcH, destX, destY);
 		}
 
 		public void BlitMask (NxBitmap source, int srcPx, int srcPy, int srcW, int srcH, int px, int py)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.BlitMask (source.GetBitmapData (), srcPx, srcPy, srcW, srcH, px, py);
 		}
 
 		#endregion
 
 		#region IQBitmap implementation
 		public void DownScale32 (int newWidth, int newHeight)
-		{
-			throw new System.NotImplementedException ();
+		{		
+			var otherImage = new Bitmap (newWidth, newHeight, this.Format);
+			var otherBitmap = otherImage.LockBits (new Rectangle (0, 0, newWidth, newHeight), ImageLockMode.ReadWrite, this.Format);
+
+			var otherBitmapData = new QBitmapData (otherBitmap);
+			mTarget.DownScaleThis (newWidth, newHeight, otherBitmapData, this.Format);
+
+			ReplaceInternalData (otherImage, otherBitmapData);
 		}
 
-		public void InitialiseBlankImage (int width, int height, System.Drawing.Imaging.PixelFormat format)
+		private void ReplaceInternalData (Bitmap otherImage, QBitmapData other)
 		{
-			throw new System.NotImplementedException ();
+			Free ();
+			mParent = otherImage;
+			mTarget = other;
 		}
 
-		public void BlurAlpha (int radius, int passes)
+		public void InitialiseBlankImage (int width, int height, PixelFormat format)
 		{
-			throw new System.NotImplementedException ();
+			mParent = new Bitmap (width, height, format);
+			var otherBitmap = mParent.LockBits (new Rectangle (0, 0, width, height), ImageLockMode.ReadWrite, format);
+			mTarget = new QBitmapData (otherBitmap);
+		}
+
+		public void BlurAlpha(int radius, int passes)
+		{
+			var otherImage = new Bitmap (Width, Height, this.Format);
+			var otherBitmap = otherImage.LockBits (new Rectangle (0, 0, Width, Height), ImageLockMode.ReadWrite, this.Format);
+
+			var temporaryBitmap = new QBitmapData (otherBitmap);
+			mTarget.BlurAlpha(radius, passes, temporaryBitmap, Width, Height);
+
+			otherImage.UnlockBits (otherBitmap);
 		}
 
 		public void Clear32 (byte r, byte g, byte b, byte a)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.Clear32 (r, g, b, a);
 		}
 
 		public void Colour32 (byte r, byte g, byte b)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.Colour32 (r, g, b);
 		}
 
 		public void Free ()
 		{
-			throw new System.NotImplementedException ();
+			mParent.UnlockBits (mTarget.GetBitmapData ());
+			mParent = null;
+			mTarget = null;
 		}
 
 		public void RetargetGlyphRectangleOutwards (QFontGlyph glyph, bool setYOffset, byte alphaTolerance)
 		{
-			throw new System.NotImplementedException ();
+			mTarget.RetargetGlyphRectangleOutwards (glyph, setYOffset, alphaTolerance);
 		}
 
-		public void Save (string fileName, System.Drawing.Imaging.ImageFormat format)
+		public void Save (string fileName, ImageFormat format)
 		{
 			throw new System.NotImplementedException ();
 		}
 
 		public bool IsEmptyAlphaPixel (int px, int py, byte alphaEmptyPixelTolerance)
 		{
-			throw new System.NotImplementedException ();
+			return mTarget.IsEmptyAlphaPixel (px, py, alphaEmptyPixelTolerance);
 		}
 
-		public System.Drawing.Imaging.BitmapData GetBitmapData ()
+		public BitmapData GetBitmapData ()
 		{
-			throw new System.NotImplementedException ();
+			return mTarget.GetBitmapData ();
 		}
 
 		public int Width {
 			get {
-				throw new System.NotImplementedException ();
+				return mTarget.Width;
 			}
 		}
 
 		public int Height {
 			get {
-				throw new System.NotImplementedException ();
+				return mTarget.Height;
 			}
 		}
 
-		public System.Drawing.Imaging.PixelFormat Format {
+		public PixelFormat Format {
 			get {
-				throw new System.NotImplementedException ();
+				return mParent.PixelFormat;
 			}
 		}
 
