@@ -3,7 +3,7 @@
   <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Example.cs">
     <Files>
       <File FileName="QuickFont\Builder.cs" Line="1" Column="1" />
-      <File FileName="NextFont\NxBitmap.cs" Line="12" Column="4" />
+      <File FileName="NextFont\NxBitmap.cs" Line="1" Column="1" />
       <File FileName="QuickFont\QBitmap.cs" Line="1" Column="1" />
       <File FileName="QuickFont\IQBitmapOperations.cs" Line="1" Column="1" />
       <File FileName="QuickFont\IQBitmap.cs" Line="1" Column="1" />
@@ -22,15 +22,15 @@
       <File FileName="NextFont\NxFont.cs" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\IntAttributeBinding.cs" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Program.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\SentanceBlock.cs" Line="9" Column="39" />
-      <File FileName="NextFont.ConsoleApplication\SentanceBlockStorageBuffer.cs" Line="20" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="8" Column="6" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="8" Column="12" />
-      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\ShaderManager.cs" Line="44" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\SentanceBlock.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\SentanceBlockStorageBuffer.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="1" Column="1" />
+      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\ShaderManager.cs" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.vert" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.frag" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Example.cs" Line="745" Column="33" />
-      <File FileName="NextFont.ConsoleApplication\BindlessTextureHandle.cs" Line="12" Column="2" />
+      <File FileName="NextFont.ConsoleApplication\BindlessTextureHandle.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
