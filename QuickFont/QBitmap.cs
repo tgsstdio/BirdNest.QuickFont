@@ -381,7 +381,7 @@ namespace QuickFont
         }
         
 
-        public unsafe void PutPixel32(int px, int py, byte r, byte g, byte b, byte a)
+        private unsafe void PutPixel32(int px, int py, byte r, byte g, byte b, byte a)
         {
             byte* addr = (byte*)(bitmapData.Scan0) + bitmapData.Stride * py + px * 4;
        
@@ -391,7 +391,7 @@ namespace QuickFont
             *(addr + 3) = a;
         }
 
-        public unsafe void GetPixel32(int px, int py, ref byte r, ref byte g, ref byte b, ref byte a)
+        private unsafe void GetPixel32(int px, int py, ref byte r, ref byte g, ref byte b, ref byte a)
         {
             byte* addr = (byte*)(bitmapData.Scan0) + bitmapData.Stride * py + px * 4;
         
@@ -402,12 +402,12 @@ namespace QuickFont
         }
 
 
-        public unsafe void PutAlpha32(int px, int py, byte a)
+        private unsafe void PutAlpha32(int px, int py, byte a)
         {
             *((byte*)(bitmapData.Scan0) + bitmapData.Stride * py + px * 4 + 3) = a;
         }
 
-        public unsafe void GetAlpha32(int px, int py, ref byte a)
+        private unsafe void GetAlpha32(int px, int py, ref byte a)
         {
             a = *((byte*)(bitmapData.Scan0) + bitmapData.Stride * py + px * 4 + 3);
         }
@@ -550,97 +550,6 @@ namespace QuickFont
                 }
             }
         }
-
-
-        /*
-
-        public void Blur(int radius, int passes)
-        {
-            QBitmap tmp = new QBitmap(new Bitmap(this.bitmap.Width, this.bitmap.Height, bitmap.PixelFormat));
-
-            byte r=0,g=0,b=0,a=0;
-            int summedR, summedG, summedB, summedA;
-            int weight = 0;
-            int xpos, ypos, x, y, kx, ky;
-
-
-            for (int pass = 0; pass < passes; pass++)
-            {
-
-                //horizontal pass
-                for (y = 0; y < bitmap.Height; y++)
-                {
-                    for (x = 0; x < bitmap.Width; x++)
-                    {
-                        summedR = summedG = summedB = summedA = weight = 0;
-                        for (kx = -radius; kx <= radius; kx++)
-                        {
-                            xpos = x + kx;
-                            if (xpos >= 0 && xpos < bitmap.Width)
-                            {
-                                GetPixel32(xpos, y, ref r, ref g, ref b, ref a);
-
-
-                                summedR += r;
-                                summedG += g;
-                                summedB += b;
-                                summedA += a;
-                                weight++;
-                            }
-
-                        }
-
-                        summedR /= weight;
-                        summedG /= weight;
-                        summedB /= weight;
-                        summedA /= weight;
-
-                        tmp.PutPixel32(x, y, (byte)summedR, (byte)summedG, (byte)summedB, (byte)summedA);
-                    }
-                }
-
-
-
-                
-                //vertical pass
-                for (x = 0; x < bitmap.Width; ++x)
-                {
-                    for (y = 0; y < bitmap.Height; ++y)
-                    {
-                        summedR = summedG = summedB = summedA = weight = 0;
-                        for (ky = -radius; ky <= radius; ky++)
-                        {
-                            ypos = y + ky;
-                            if (ypos >= 0 && ypos < bitmap.Height)
-                            {
-                                tmp.GetPixel32(x, ypos, ref r, ref g, ref b, ref a);
-
-                                summedR += r;
-                                summedG += g;
-                                summedB += b;
-                                summedA += a;
-                                weight++;
-                            }
-                        }
-
-                        summedR /= weight;
-                        summedG /= weight;
-                        summedB /= weight;
-                        summedA /= weight;
-
-                        PutPixel32(x, y, (byte)summedR, (byte)summedG, (byte)summedB, (byte)summedA);
-
-                    }
-                } 
-
-            }
-
-            tmp.Free();
-
-        }*/
-
-
-
 
         public void BlurAlpha(int radius, int passes)
         {

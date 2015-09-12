@@ -5,7 +5,9 @@ namespace NextFont.ConsoleApplication
 	[StructLayout(LayoutKind.Sequential)]
 	public struct BindlessTextureHandle
 	{
-		public long TextureId {get;set;}
+		public ulong Handle {get;set;}
+		public float Slice {get;set;}
+		public uint Index { get; set; }
 	}
 }
 

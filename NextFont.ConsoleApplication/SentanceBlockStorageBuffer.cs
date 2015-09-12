@@ -15,8 +15,9 @@ namespace NextFont.ConsoleApplication
 			// manually set
 			const int BUFFER_INDEX = 0;
 			GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BUFFER_INDEX, BufferId);
+			var structSize = Marshal.SizeOf (typeof(SentanceBlock));
 
-			var bufferSize = (IntPtr) (blocks.Length * Marshal.SizeOf (typeof(SentanceBlock)));
+			var bufferSize = (IntPtr) (blocks.Length * structSize);
 			GL.BufferData<SentanceBlock>(BufferTarget.ShaderStorageBuffer, bufferSize, blocks, hint);
 		}
 

@@ -1,24 +1,42 @@
 ﻿<Properties StartupItem="NextFont.ConsoleApplication\NextFont.ConsoleApplication.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont\NxFontFileLoader.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Example.cs">
     <Files>
       <File FileName="QuickFont\Builder.cs" Line="1" Column="1" />
-      <File FileName="NextFont\NxBitmap.cs" Line="63" Column="47" />
+      <File FileName="NextFont\NxBitmap.cs" Line="12" Column="4" />
       <File FileName="QuickFont\QBitmap.cs" Line="1" Column="1" />
       <File FileName="QuickFont\IQBitmapOperations.cs" Line="1" Column="1" />
       <File FileName="QuickFont\IQBitmap.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\TexturePage.cs" Line="37" Column="20" />
+      <File FileName="QuickFont\TexturePage.cs" Line="1" Column="1" />
       <File FileName="Example\Game.cs" Line="1" Column="1" />
       <File FileName="QuickFont\QVertexBuffer.cs" Line="1" Column="1" />
       <File FileName="QuickFont\QFontData.cs" Line="1" Column="1" />
-      <File FileName="NextFont\NxFontFileLoader.cs" Line="53" Column="43" />
-      <File FileName="QuickFont\Helper.cs" Line="395" Column="4" />
+      <File FileName="NextFont\NxFontFileLoader.cs" Line="1" Column="1" />
+      <File FileName="QuickFont\Helper.cs" Line="1" Column="1" />
       <File FileName="QuickFont\QFont.cs" Line="1" Column="1" />
-      <File FileName="QuickFont\QBitmapData.cs" Line="486" Column="24" />
+      <File FileName="QuickFont\QBitmapData.cs" Line="1" Column="1" />
+      <File FileName="NextFont\BufferLock.cs" Line="1" Column="1" />
+      <File FileName="NextFont\CharacterBuffer.cs" Line="1" Column="1" />
+      <File FileName="NextFont\IGlyphRenderer.cs" Line="1" Column="1" />
+      <File FileName="NextFont\INxFontLoader.cs" Line="1" Column="1" />
+      <File FileName="NextFont\NxFont.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\IntAttributeBinding.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Program.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\SentanceBlock.cs" Line="9" Column="39" />
+      <File FileName="NextFont.ConsoleApplication\SentanceBlockStorageBuffer.cs" Line="20" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="8" Column="6" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="8" Column="12" />
+      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\ShaderManager.cs" Line="44" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.vert" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.frag" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="745" Column="33" />
+      <File FileName="NextFont.ConsoleApplication\BindlessTextureHandle.cs" Line="12" Column="2" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="D:\Projects\TechDemos\BirdNest.QuickFont\NextFont.ConsoleApplication\SentanceBlockStorageBuffer.cs" line="20" column="14" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <DisabledProjects>
