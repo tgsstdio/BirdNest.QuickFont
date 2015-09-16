@@ -12,12 +12,38 @@ namespace NextFont
 		private readonly QFontData mFontData;
 		private Vector3 PrintOffset;
 		private Color4 mFontColor;
+		private readonly SentanceInfo[] mSentances;
 		public BufferedGlyphRenderer (QFontData fontData, Vector3 printOffset, Color4 fontColor)
 		{
 			mFontData = fontData;
 			mCharacters = new List<GlyphKey> ();
 			PrintOffset = printOffset;
 			mFontColor = fontColor;
+			mSentances = new SentanceInfo[mFontData.Pages.Length];
+		}
+
+		private class SentanceInfo
+		{
+			public SentanceBlock BlockInfo;
+			private readonly List<float> mVertices;
+			public SentenceInfo()
+			{
+				mVertices = new List<float>();
+			}
+
+			public void Reset()
+			{
+				mVertices.Clear ();
+			}
+
+			public void AddVertex(Vector3 pos, Vector2 tx)
+			{
+				mVertices.Add (pos.X);
+				mVertices.Add (pos.Y);
+				mVertices.Add (pos.Z);
+				mVertices.Add (tx.X);
+				mVertices.Add (tx.Y);
+			}
 		}
 
 		#region IGlyphRenderer implementation
@@ -51,6 +77,7 @@ namespace NextFont
 				var glyph = mFontData.CharSetMapping[c];
 
 				TexturePage sheet = mFontData.Pages[glyph.page];
+				SentanceInfo dest = mSentances [glyph.page];
 
 				float tx1 = (float)(glyph.rect.X) / sheet.Width;
 				float ty1 = (float)(glyph.rect.Y) / sheet.Height;
@@ -73,9 +100,10 @@ namespace NextFont
 
 //				var vbo = VertexBuffers[glyph.page];
 //
-//				vbo.AddVertex(v1, normal, tv1, argb);
-//				vbo.AddVertex(v2, normal, tv2, argb);
-//				vbo.AddVertex(v3, normal, tv3, argb);
+				dest.BlockInfo.Color = new Vector4(mFontColor.R, mFontColor.G, mFontColor.B, mFontColor.A);
+				dest.AddVertex(v1, tv1, argb);
+				dest.AddVertex(v2, tv2, argb);
+				dest.AddVertex(v3, tv3, argb);
 //
 //				vbo.AddVertex(v1, normal, tv1, argb);
 //				vbo.AddVertex(v3, normal, tv3, argb);

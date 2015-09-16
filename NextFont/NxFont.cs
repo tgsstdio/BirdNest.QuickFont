@@ -7,6 +7,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using System.Collections.Generic;
 using System.IO;
+using OpenTK.Graphics.OpenGL;
 
 namespace NextFont
 {
@@ -102,6 +103,8 @@ namespace NextFont
 			InitialiseVBOs();
 		}
 
+		private IGlyphRenderer mMainFontRenderer;
+		private IGlyphRenderer mDropShaderRenderer;
 		private void InitialiseVBOs()
 		{
 
@@ -613,6 +616,7 @@ namespace NextFont
 					var glyph = fontData.CharSetMapping[c];
 
 					// TODO : intercept and add drop shadow
+					RenderDropShadow (x, y, c, glyph);
 					RenderGlyph(x,y,c, false);
 
 
@@ -841,13 +845,6 @@ namespace NextFont
 //				vbo.AddVertex(v1, normal, tv1, argb);
 //				vbo.AddVertex(v3, normal, tv3, argb);
 //				vbo.AddVertex(v4, normal, tv4, argb);
-//			}
-//
-//			// else use immediate mode
-//			else
-//			{
-//				throw new InvalidOperationException ();
-//			}
 		}
 
 		private void RenderDropShadow(float xOffset, float yOffset, char c, QFontGlyph nonShadowGlyph)

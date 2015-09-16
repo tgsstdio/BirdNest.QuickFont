@@ -10,8 +10,10 @@ namespace QuickFont
         int gLTexID;
         int width;
         int height;
+		long mHandle;
 
         public int GLTexID { get { return gLTexID; } }
+		public long Resident { get { return mHandle; } }
         public int Width { get { return width; } }
         public int Height { get { return height; } }
 
@@ -49,12 +51,16 @@ namespace QuickFont
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0,
                     OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, dataSource.Scan0);
+
+				mHandle = GL.Arb.GetTextureHandle(gLTexID);
+				GL.Arb.MakeTextureHandleResident(mHandle);
             });
         }
 
 
         public void Dispose()
         {
+			GL.Arb.MakeTextureHandleNonResident(mHandle);
             GL.DeleteTexture(gLTexID);
         }
 
