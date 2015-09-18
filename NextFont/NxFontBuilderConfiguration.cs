@@ -12,6 +12,9 @@ namespace NextFont
 		public QFontShadowConfiguration ShadowConfig = null;
 		public QFontKerningConfiguration KerningConfig = new QFontKerningConfiguration();
 		public TextGenerationRenderHint TextGenerationRenderHint = TextGenerationRenderHint.SizeDependent;
+		public IDrawCommandList CharacterOutput { get; set;}
+		public IGlyphRenderer FontGlyphRenderer {get;set;}
+		public IGlyphRenderer DropShadowRenderer {get;set;}
 
 		public NxFontBuilderConfiguration (Matrix4 transform) : this(transform, false)
 		{

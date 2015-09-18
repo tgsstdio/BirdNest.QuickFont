@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace NextFont.ConsoleApplication
+namespace NextFont
 {
 	[StructLayout(LayoutKind.Sequential)]
 	public struct DrawElementsIndirectCommand

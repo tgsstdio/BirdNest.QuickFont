@@ -1,16 +1,16 @@
 #version 400
 #extension GL_ARB_bindless_texture : require
 
-struct BindlessTextureHandle
+struct TextureHandle
 {
 	sampler2D Texture;
-	float Slice;
 	uint Index;
+	float Slice;
 };
 
 struct SentanceBlock 
 {
-	BindlessTextureHandle Handle;
+	TextureHandle Handle;
 	vec4 Color;
 	mat4 Transform;
 };

@@ -8,41 +8,74 @@ namespace NextFont
 {
 	public class BufferedGlyphRenderer : IGlyphRenderer
 	{
+		public Matrix4 Transform {
+			get;
+			set;
+		}
+
 		private readonly List<GlyphKey> mCharacters;
 		private readonly QFontData mFontData;
 		private Vector3 PrintOffset;
-		private Color4 mFontColor;
-		private readonly SentanceInfo[] mSentances;
-		public BufferedGlyphRenderer (QFontData fontData, Vector3 printOffset, Color4 fontColor)
+
+		public Color4 Colour {get;set;}
+
+		private readonly SentanceBlockInfo[] mDestinations;
+		private readonly IDrawCommandList mCommandBuffer;
+		public BufferedGlyphRenderer (IDrawCommandList commandBuffer, QFontData fontData, Vector3 printOffset, Color4 fontColor)
 		{
 			mFontData = fontData;
 			mCharacters = new List<GlyphKey> ();
 			PrintOffset = printOffset;
-			mFontColor = fontColor;
-			mSentances = new SentanceInfo[mFontData.Pages.Length];
+			Colour = fontColor;
+			mCommandBuffer = commandBuffer;
+			mDestinations = new SentanceBlockInfo[mFontData.Pages.Length];
+			InitialiseDestinations ();
 		}
 
-		private class SentanceInfo
+		private void InitialiseDestinations()
+		{
+
+		}
+
+		private class SentanceBlockInfo
 		{
 			public SentanceBlock BlockInfo;
-			private readonly List<float> mVertices;
-			public SentenceInfo()
+			public List<float> Vertices { get; private set; }
+			public List<uint> Indices { get; private set; }
+			private uint mNextIndex;
+			private uint mNoOfTriangles;
+			public SentanceBlockInfo()
 			{
-				mVertices = new List<float>();
+				Vertices = new List<float>();
+				Indices = new List<uint>();
 			}
 
 			public void Reset()
 			{
-				mVertices.Clear ();
+				Vertices.Clear ();
+				Indices.Clear ();
+				mNextIndex = 0;
+				mNoOfTriangles = 0;
 			}
 
-			public void AddVertex(Vector3 pos, Vector2 tx)
+			public void AddTriangle(uint a, uint b, uint c)
 			{
-				mVertices.Add (pos.X);
-				mVertices.Add (pos.Y);
-				mVertices.Add (pos.Z);
-				mVertices.Add (tx.X);
-				mVertices.Add (tx.Y);
+				Indices.Add (a);
+				Indices.Add (b);
+				Indices.Add (c);
+				++mNoOfTriangles;
+			}
+
+			public uint AddVertex(Vector3 pos, Vector2 tx)
+			{
+				Vertices.Add (pos.X);
+				Vertices.Add (pos.Y);
+				Vertices.Add (pos.Z);
+				Vertices.Add (tx.X);
+				Vertices.Add (tx.Y);
+				var currentIndex = mNextIndex;
+				++mNextIndex;
+				return currentIndex;
 			}
 		}
 
@@ -77,7 +110,7 @@ namespace NextFont
 				var glyph = mFontData.CharSetMapping[c];
 
 				TexturePage sheet = mFontData.Pages[glyph.page];
-				SentanceInfo dest = mSentances [glyph.page];
+				SentanceBlockInfo dest = mDestinations [glyph.page];
 
 				float tx1 = (float)(glyph.rect.X) / sheet.Width;
 				float ty1 = (float)(glyph.rect.Y) / sheet.Height;
@@ -94,22 +127,27 @@ namespace NextFont
 				var v3 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset + glyph.rect.Height, 0);
 				var v4 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset, 0);
 
-				var normal = new Vector3(0, 0, -1);
+				dest.BlockInfo.Color = new Vector4(Colour.R, Colour.G, Colour.B, Colour.A);
+				var t1_0 = dest.AddVertex(v1, tv1);
+				var t1_1 = dest.AddVertex(v2, tv2);
+				var t1_2 = dest.AddVertex(v3, tv3);
 
-				int argb = mFontColor.ToArgb ();
+				dest.AddTriangle (t1_0, t1_1, t1_2);
 
-//				var vbo = VertexBuffers[glyph.page];
-//
-				dest.BlockInfo.Color = new Vector4(mFontColor.R, mFontColor.G, mFontColor.B, mFontColor.A);
-				dest.AddVertex(v1, tv1, argb);
-				dest.AddVertex(v2, tv2, argb);
-				dest.AddVertex(v3, tv3, argb);
-//
-//				vbo.AddVertex(v1, normal, tv1, argb);
-//				vbo.AddVertex(v3, normal, tv3, argb);
-//				vbo.AddVertex(v4, normal, tv4, argb);
+				var t1_3 = dest.AddVertex(v4, tv4);
+
+				dest.AddTriangle (t1_0, t1_2, t1_3);
 			}
 
+			foreach(var dest in mDestinations)
+			{
+				mCommandBuffer.RenderChunk (dest.BlockInfo.Texture,
+					dest.BlockInfo.Color,
+					dest.BlockInfo.Transform,
+					dest.Vertices,
+					dest.Indices);
+					
+			}
 		}
 		#endregion
 	}

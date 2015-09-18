@@ -742,7 +742,7 @@ namespace NextFont.ConsoleApplication
 			commands [0].FirstIndex = 0;
 			commands [0].BaseVertex = 0;
 			// IMPORTANT - controls material index
-			commands [0].BaseInstance = 2;
+			commands [0].BaseInstance = 1;
 //
 //			GL.UseProgram(programID);
 //			CheckGLError ();

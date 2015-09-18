@@ -100,14 +100,21 @@ namespace NextFont
 			// Replace
 //			if(config.UseVertexBuffer)
 //				InitVBOs();
-			InitialiseVBOs();
+			InitialiseVBOs(config);
 		}
 
-		private IGlyphRenderer mMainFontRenderer;
-		private IGlyphRenderer mDropShaderRenderer;
-		private void InitialiseVBOs()
-		{
+		public IGlyphRenderer FontRenderer {get;set;}
+		private void InitialiseVBOs(NxFontBuilderConfiguration config)
+		{			
+			if (config.CharacterOutput == null)
+				return;
 
+			FontRenderer = config.FontGlyphRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, fontData, Vector3.Zero, Color4.White);
+
+			if (DropShadow != null)
+			{
+				DropShadow.FontRenderer = config.DropShadowRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, DropShadow.fontData, Vector3.Zero, Color4.White);
+			}
 		}
 
 		public static TransformViewport? SetupTransformViewport (float height, bool transformToCurrentOrthogProjection, Matrix4 transform, out float fontScale)
@@ -168,7 +175,9 @@ namespace NextFont
 		public void SafePrint(Matrix4 transform, Rectangle clientRectangle, string text, float maxWidth, QFontAlignment alignment)
 		{
 			var processedText = SafeProcessText(clientRectangle, text, maxWidth, alignment);
+			BeginPrint (transform);
 			SafePrintOrMeasure(processedText,  false);
+			EndPrint ();
 		}
 
 		private SizeF SafePrintOrMeasure(ProcessedText processedText, bool measureOnly)
@@ -688,9 +697,38 @@ namespace NextFont
 
 		#region Print
 
+		void BeginPrint (Matrix4 transform)
+		{
+			if (FontRenderer != null)
+			{
+				FontRenderer.Colour = Options.Colour;		
+				FontRenderer.Transform = transform;
+			}
+			if (DropShadow != null && DropShadow.FontRenderer != null)
+			{
+				DropShadow.FontRenderer.Colour = new Color4(1,1,1, Options.DropShadowOpacity);
+				DropShadow.FontRenderer.Transform = transform;
+			}
+		}
+
+		void EndPrint ()
+		{
+			if (FontRenderer != null)
+			{
+				FontRenderer.Flush ();
+			}
+			if (DropShadow != null && DropShadow.FontRenderer != null)
+			{
+				DropShadow.FontRenderer.Flush ();
+			}
+		}
+
 		public SizeF Print(Matrix4 transform, string text, QFontAlignment alignment)
 		{
-			return PrintOrMeasure(text, alignment, false);
+			BeginPrint (transform);
+			var result = PrintOrMeasure(text, alignment, false);
+			EndPrint ();
+			return result;
 		}
 
 		private SizeF PrintOrMeasure(string text, QFontAlignment alignment, bool measureOnly)
@@ -802,49 +840,12 @@ namespace NextFont
 			return xOffset;
 		}
 
-		Vector3 PrintOffset;
 		private void RenderGlyph(float x, float y, char c, bool isDropShadow)
 		{
-			var glyph = fontData.CharSetMapping[c];
-
-			TexturePage sheet = fontData.Pages[glyph.page];
-
-			float tx1 = (float)(glyph.rect.X) / sheet.Width;
-			float ty1 = (float)(glyph.rect.Y) / sheet.Height;
-			float tx2 = (float)(glyph.rect.X + glyph.rect.Width) / sheet.Width;
-			float ty2 = (float)(glyph.rect.Y + glyph.rect.Height) / sheet.Height;
-
-			var tv1 = new Vector2(tx1, ty1);
-			var tv2 = new Vector2(tx1, ty2);
-			var tv3 = new Vector2(tx2, ty2);
-			var tv4 = new Vector2(tx2, ty1);
-
-			var v1 = PrintOffset + new Vector3(x, y + glyph.yOffset, 0);
-			var v2 = PrintOffset + new Vector3(x, y + glyph.yOffset + glyph.rect.Height, 0);
-			var v3 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset + glyph.rect.Height, 0);
-			var v4 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset, 0);
-
-			Color4 color = Options.Colour;
-			if(isDropShadow)
+			if (FontRenderer != null)
 			{
-				color = new Color4(1,1,1, Options.DropShadowOpacity);
+				FontRenderer.RenderGlyph (x, y, c, isDropShadow);
 			}
-
-//			if (UsingVertexBuffers)
-//			{
-//				var normal = new Vector3(0, 0, -1);
-//
-//				int argb = color.ToArgb ();
-//
-//				var vbo = VertexBuffers[glyph.page];
-//
-//				vbo.AddVertex(v1, normal, tv1, argb);
-//				vbo.AddVertex(v2, normal, tv2, argb);
-//				vbo.AddVertex(v3, normal, tv3, argb);
-//
-//				vbo.AddVertex(v1, normal, tv1, argb);
-//				vbo.AddVertex(v3, normal, tv3, argb);
-//				vbo.AddVertex(v4, normal, tv4, argb);
 		}
 
 		private void RenderDropShadow(float xOffset, float yOffset, char c, QFontGlyph nonShadowGlyph)
@@ -861,7 +862,7 @@ namespace NextFont
 				//make sure fontdata font's options are synced with the actual options
 				if (DropShadow.Options != Options)
 					DropShadow.Options = Options;
-
+				
 				DropShadow.RenderGlyph(
 					x + (fontData.meanGlyphWidth * Options.DropShadowOffset.X + nonShadowGlyph.rect.Width * 0.5f),
 					y + (fontData.meanGlyphWidth * Options.DropShadowOffset.Y + nonShadowGlyph.rect.Height * 0.5f + nonShadowGlyph.yOffset), c, true);
