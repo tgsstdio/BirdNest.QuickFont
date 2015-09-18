@@ -219,19 +219,25 @@ namespace NextFont.ConsoleApplication
 			var fontFileLoader = new NxFontFileLoader ();
 			heading2 = fontFileLoader.Load("woodenFont.qfont", Height, 1.0f, new NxFontLoaderConfiguration(screenMatrix, true));
 
+			var singleDrawCommand = new DrawCommandList ();
+
 			var builderConfig = new NxFontBuilderConfiguration(screenMatrix, true);
+			builderConfig.CharacterOutput = singleDrawCommand;
 			builderConfig.ShadowConfig.blurRadius = 1; //reduce blur radius because font is very small
 			builderConfig.TextGenerationRenderHint = TextGenerationRenderHint.ClearTypeGridFit; //best render hint for this font
 			mainText = new NxFont("Fonts/times.ttf", 14,  Height, builderConfig);
 
 			var heading1Config = new NxFontBuilderConfiguration(screenMatrix);
+			heading1Config.CharacterOutput = singleDrawCommand;
 			heading1Config.Transform = screenMatrix;
 			heading1 = new NxFont("Fonts/HappySans.ttf", 72, Height, heading1Config);
 
 			var buildConfig = new NxFontBuilderConfiguration (screenMatrix, true);
+			buildConfig.CharacterOutput = singleDrawCommand;
 			controlsText = new NxFont("Fonts/HappySans.ttf", 32,  Height, buildConfig);
 
 			var noShadowConfig = new NxFontBuilderConfiguration (screenMatrix);
+			noShadowConfig.CharacterOutput = singleDrawCommand;
 			codeText = new NxFont("Fonts/Comfortaa-Regular.ttf", 12,  Height, FontStyle.Regular, noShadowConfig);
 
 			heading1.Options.Colour = new Color4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -322,10 +328,10 @@ namespace NextFont.ConsoleApplication
 			vbo.Initialise (elementBuffer);
 
 			sentances = new SentanceBlock[4];
-			sentances [0] = new SentanceBlock{ Color = new Vector4 (0.5f, 0.5f, 0.5f, 0.5f) };
-			sentances [1] = new SentanceBlock{ Color = new Vector4 (1, 0, 0, 1) };
-			sentances [2] = new SentanceBlock{ Color = new Vector4 (0, 1, 0, 1) };
-			sentances [3] = new SentanceBlock{ Color = new Vector4 (0, 0, 1, 1) };
+			sentances [0] = new SentanceBlock{ Colour = new Vector4 (0.5f, 0.5f, 0.5f, 0.5f) };
+			sentances [1] = new SentanceBlock{ Colour = new Vector4 (1, 0, 0, 1) };
+			sentances [2] = new SentanceBlock{ Colour = new Vector4 (0, 1, 0, 1) };
+			sentances [3] = new SentanceBlock{ Colour = new Vector4 (0, 0, 1, 1) };
 
 			ssbo = new SentanceBlockStorageBuffer (sentances, BufferUsageHint.StaticRead);
 			//	GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
@@ -389,6 +395,8 @@ namespace NextFont.ConsoleApplication
 				GL.BindVertexArray (0);
 				GL.UseProgram (0);
 			}
+
+			GenerateText ();
 		}
 
 		void InitialiseUnload ()
@@ -447,88 +455,75 @@ namespace NextFont.ConsoleApplication
 
 			// update shader mesh
 
+			//GenerateText ();
+
+			//	QFont.End();
+		}
+
+		void GenerateText ()
+		{
 			switch (currentDemoPage)
 			{
-
 			case 1:
 				{
 					float yOffset = 0;
-
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset1 = new Vector3(Width * 0.5f, yOffset, 0f);
-						var transform1 = Matrix4.CreateTranslation(offset1);
-
-						heading1.Print(transform1, "QuickFont", QFontAlignment.Centre);
-						yOffset += heading1.Measure(ClientRectangle, "QuickFont").Height;
+					var offset1 = new Vector3 (Width * 0.5f, yOffset, 0f);
+					var transform1 = Matrix4.CreateTranslation (offset1);
+					heading1.Print (transform1, "QuickFont", QFontAlignment.Centre);
+					yOffset += heading1.Measure (ClientRectangle, "QuickFont").Height;
 					//GL.PopMatrix();
-
 					//GL.PushMatrix();
-						var offset2 = new Vector3(20f, yOffset, 0f);
-						var transform2 = Matrix4.CreateTranslation(offset2);
-						heading2.Print(transform2, "Introduction", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "Introduction").Height;
+					var offset2 = new Vector3 (20f, yOffset, 0f);
+					var transform2 = Matrix4.CreateTranslation (offset2);
+					heading2.Print (transform2, "Introduction", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "Introduction").Height;
 					//GL.PopMatrix();
-
 					//GL.PushMatrix();
-						var offset3 = new Vector3(30f, yOffset + 20, 0f);
-						var transform3 = Matrix4.CreateTranslation(offset3);
-						mainText.SafePrint(transform3, ClientRectangle, introduction, Width - 60, QFontAlignment.Justify);
+					var offset3 = new Vector3 (30f, yOffset + 20, 0f);
+					var transform3 = Matrix4.CreateTranslation (offset3);
+					mainText.SafePrint (transform3, ClientRectangle, introduction, Width - 60, QFontAlignment.Justify);
 					//GL.PopMatrix();
-
 					//QFont.End();
 				}
 				break;
 			case 2:
 				{
 					float yOffset = 20;
-
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Easy as ABC!", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "Easy as ABC!").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Easy as ABC!", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
 					//GL.PopMatrix();
-
-					PrintComment(usingQuickFontIsSuperEasy, ref yOffset);
-					PrintCode(loadingAFont1, ref yOffset);
-
-					PrintComment(andPrintWithIt, ref yOffset);
-					PrintCode(printWithFont1, ref yOffset);
-
-					PrintComment(itIsAlsoEasyToMeasure, ref yOffset);
-					PrintCode(measureText1, ref yOffset);
-
-					PrintComment(oneOfTheFirstGotchas, ref yOffset);
-					PrintCode(loadingAFont2, ref yOffset);
-
+					PrintComment (usingQuickFontIsSuperEasy, ref yOffset);
+					PrintCode (loadingAFont1, ref yOffset);
+					PrintComment (andPrintWithIt, ref yOffset);
+					PrintCode (printWithFont1, ref yOffset);
+					PrintComment (itIsAlsoEasyToMeasure, ref yOffset);
+					PrintCode (measureText1, ref yOffset);
+					PrintComment (oneOfTheFirstGotchas, ref yOffset);
+					PrintCode (loadingAFont2, ref yOffset);
 					//QFont.End();
 				}
 				break;
 			case 3:
 				{
 					float yOffset = 20;
-
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Alignment", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "Easy as ABC!").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Alignment", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
 					//GL.PopMatrix();
-
-					PrintCommentWithLine(whenPrintingText, QFontAlignment.Left, Width * 0.5f, ref yOffset);
-					PrintCode(printWithFont2, ref yOffset);
-
-					PrintCommentWithLine(righAlignedText, QFontAlignment.Right, Width * 0.5f, ref yOffset);
+					PrintCommentWithLine (whenPrintingText, QFontAlignment.Left, Width * 0.5f, ref yOffset);
+					PrintCode (printWithFont2, ref yOffset);
+					PrintCommentWithLine (righAlignedText, QFontAlignment.Right, Width * 0.5f, ref yOffset);
 					yOffset += 10f;
-
-					PrintCommentWithLine(centredTextAsYou, QFontAlignment.Centre, Width * 0.5f, ref yOffset);
-
+					PrintCommentWithLine (centredTextAsYou, QFontAlignment.Centre, Width * 0.5f, ref yOffset);
 					//QFont.End();
 				}
 				break;
@@ -536,31 +531,26 @@ namespace NextFont.ConsoleApplication
 				{
 					float yOffset = 20;
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Bounds and Justify", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "Easy as ABC!").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Bounds and Justify", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
 					//GL.PopMatrix();
-
 					//GL.PushMatrix();
-						yOffset += 20;
-						var offset2 = new Vector3((int)(Width * 0.5), yOffset, 0f);
-						var transform2 = Matrix4.CreateTranslation(offset2);
-						controlsText.Print(transform2, "Press [Up], [Down] or [Enter]!", QFontAlignment.Centre);
-						yOffset += controlsText.Measure(ClientRectangle, "[]").Height;
+					yOffset += 20;
+					var offset2 = new Vector3 ((int)(Width * 0.5), yOffset, 0f);
+					var transform2 = Matrix4.CreateTranslation (offset2);
+					controlsText.Print (transform2, "Press [Up], [Down] or [Enter]!", QFontAlignment.Centre);
+					yOffset += controlsText.Measure (ClientRectangle, "[]").Height;
 					//GL.PopMatrix();
-
-					float boundShrink = (int) (350* (1- Math.Cos(boundsAnimationCnt * Math.PI * 2)));
-
-					yOffset += 15; ;
-					PrintWithBounds(mainText, ofCourseItsNot, new RectangleF(30f + boundShrink*0.5f, yOffset, Width - 60 - boundShrink, 350f), cycleAlignment, ref yOffset);
-
+					float boundShrink = (int)(350 * (1 - Math.Cos (boundsAnimationCnt * Math.PI * 2)));
+					yOffset += 15;
+					;
+					PrintWithBounds (mainText, ofCourseItsNot, new RectangleF (30f + boundShrink * 0.5f, yOffset, Width - 60 - boundShrink, 350f), cycleAlignment, ref yOffset);
 					string printWithBounds = "myFont.Print(text,400f,QFontAlignment." + cycleAlignment + ");";
 					yOffset += 15f;
-					PrintCode(printWithBounds, ref yOffset);
-
+					PrintCode (printWithBounds, ref yOffset);
 					//QFont.End();
 				}
 				break;
@@ -568,76 +558,58 @@ namespace NextFont.ConsoleApplication
 				{
 					float yOffset = 20;
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Your own Texture Fonts", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "T").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Your own Texture Fonts", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//GL.PopMatrix();
-
-					PrintComment(anotherCoolFeature, ref yOffset);
-					PrintCode(textureFontCode1, ref yOffset);
-					PrintComment(thisWillHaveCreated, ref yOffset);
-
+					PrintComment (anotherCoolFeature, ref yOffset);
+					PrintCode (textureFontCode1, ref yOffset);
+					PrintComment (thisWillHaveCreated, ref yOffset);
 					//QFont.End();
 				}
 				break;
-
-
 			case 6:
 				{
 					float yOffset = 20;
 					//QFont.Begin();
-
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Your own Texture Fonts", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle,"T").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Your own Texture Fonts", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//GL.PopMatrix();
-
-					PrintComment(ifYouDoIntend, ref yOffset);
-					PrintCode(textureFontCode2, ref yOffset);
-					PrintComment(actuallyTexturing, ref yOffset);
-					PrintCode(textureFontCode3, ref yOffset);
-
+					PrintComment (ifYouDoIntend, ref yOffset);
+					PrintCode (textureFontCode2, ref yOffset);
+					PrintComment (actuallyTexturing, ref yOffset);
+					PrintCode (textureFontCode3, ref yOffset);
 					//	QFont.End();
-
 				}
 				break;
-
-
-
 			case 7:
 				{
 					float yOffset = 20;
-
 					//QFont.Begin();
-					heading2.Options.DropShadowOffset = new Vector2(0.1f + 0.2f * (float)Math.Sin(cnt), 0.1f + 0.2f * (float)Math.Cos(cnt));
-
+					heading2.Options.DropShadowOffset = new Vector2 (0.1f + 0.2f * (float)Math.Sin (cnt), 0.1f + 0.2f * (float)Math.Cos (cnt));
 					//GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Drop Shadows", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "T").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Drop Shadows", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
-
-					heading2.Options.DropShadowOffset = new Vector2(0.16f, 0.16f); //back to default
-
+					heading2.Options.DropShadowOffset = new Vector2 (0.16f, 0.16f);
+					//back to default
 					mainText.Options.DropShadowActive = true;
 					mainText.Options.DropShadowOpacity = 0.7f;
-					mainText.Options.DropShadowOffset = new Vector2(0.1f + 0.2f * (float)Math.Sin(cnt), 0.1f + 0.2f * (float)Math.Cos(cnt));
-
-					PrintComment(asIhaveleant, ref yOffset);
-					PrintCode(dropShadowCode1, ref yOffset);
-					PrintComment(thisWorksFine, ref yOffset);
-					PrintCode(dropShadowCode2, ref yOffset);
-					PrintComment(onceAFont, ref yOffset);
-
+					mainText.Options.DropShadowOffset = new Vector2 (0.1f + 0.2f * (float)Math.Sin (cnt), 0.1f + 0.2f * (float)Math.Cos (cnt));
+					PrintComment (asIhaveleant, ref yOffset);
+					PrintCode (dropShadowCode1, ref yOffset);
+					PrintComment (thisWorksFine, ref yOffset);
+					PrintCode (dropShadowCode2, ref yOffset);
+					PrintComment (onceAFont, ref yOffset);
 					mainText.Options.DropShadowActive = false;
 					//	QFont.End();
-
 				}
 				break;
 			case 8:
@@ -645,72 +617,61 @@ namespace NextFont.ConsoleApplication
 					float yOffset = 20;
 					//	QFont.Begin();
 					monoSpaced.Options.CharacterSpacing = 0.05f;
-
 					//	GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "Monospaced Fonts", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "T").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "Monospaced Fonts", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
-
-					WriteComment(monoSpaced, hereIsSomeMono, QFontAlignment.Left, ref yOffset);
-					PrintCode(monoCode1, ref yOffset);
-					WriteComment(monoSpaced, theDefaultMono, QFontAlignment.Left, ref yOffset);
-
-					WriteCommentWithLine(monoSpaced, mono, QFontAlignment.Left, Width * 0.5f, ref yOffset);
+					WriteComment (monoSpaced, hereIsSomeMono, QFontAlignment.Left, ref yOffset);
+					PrintCode (monoCode1, ref yOffset);
+					WriteComment (monoSpaced, theDefaultMono, QFontAlignment.Left, ref yOffset);
+					WriteCommentWithLine (monoSpaced, mono, QFontAlignment.Left, Width * 0.5f, ref yOffset);
 					yOffset += 2f;
-					WriteCommentWithLine(monoSpaced, mono, QFontAlignment.Right, Width * 0.5f, ref yOffset);
+					WriteCommentWithLine (monoSpaced, mono, QFontAlignment.Right, Width * 0.5f, ref yOffset);
 					yOffset += 2f;
-					WriteCommentWithLine(monoSpaced, mono, QFontAlignment.Centre, Width * 0.5f, ref yOffset);
+					WriteCommentWithLine (monoSpaced, mono, QFontAlignment.Centre, Width * 0.5f, ref yOffset);
 					yOffset += 2f;
-
 					monoSpaced.Options.CharacterSpacing = 0.5f;
 					const string AS_USUAL_COMMENT = "As usual, you can adjust character spacing with myFont.Options.CharacterSpacing.";
 					WriteComment (monoSpaced, AS_USUAL_COMMENT, QFontAlignment.Left, ref yOffset);
-
-
 					//	QFont.End();
-
 				}
 				break;
 			case 9:
 				{
 					float yOffset = 20;
-
 					//	QFont.Begin();
 					//	GL.PushMatrix();
-						var offset = new Vector3(20f, yOffset, 0f);
-						var transform = Matrix4.CreateTranslation(offset);
-						heading2.Print(transform, "In Conclusion", QFontAlignment.Left);
-						yOffset += heading2.Measure(ClientRectangle, "T").Height;
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					heading2.Print (transform, "In Conclusion", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
-					PrintComment(thereAreActually, ref yOffset);
+					PrintComment (thereAreActually, ref yOffset);
 					//	QFont.End();
 				}
 				break;
 			}
 			//	QFont.Begin();
-
 			if (currentDemoPage != LAST_PAGE)
 			{
 				//	GL.PushMatrix();
-					var offset = new Vector3(Width - 10 - 16 * (float)(1 + Math.Sin(cnt * 4)), Height - controlsText.Measure(ClientRectangle, "P").Height - 10f, 0f);
-					var transform = Matrix4.CreateTranslation(offset);
-					controlsText.Options.Colour = new Color4(0.8f, 0.1f, 0.1f, 1.0f);
-					controlsText.Print(transform, "Press [Right] ->", QFontAlignment.Right);
+				var offset = new Vector3 (Width - 10 - 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
+				var transform = Matrix4.CreateTranslation (offset);
+				controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
+				controlsText.Print (transform, "Press [Right] ->", QFontAlignment.Right);
 				//	GL.PopMatrix();
 			}
-
 			if (currentDemoPage != 1)
 			{
 				//	GL.PushMatrix();
-					var offset = new Vector3(10 + 16 * (float)(1 + Math.Sin(cnt * 4)), Height - controlsText.Measure(ClientRectangle, "P").Height - 10f, 0f);
-					var transform = Matrix4.CreateTranslation(offset);
-					controlsText.Options.Colour = new Color4(0.8f, 0.1f, 0.1f, 1.0f);
-					controlsText.Print(transform, "<- Press [Left]", QFontAlignment.Left);
+				var offset = new Vector3 (10 + 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
+				var transform = Matrix4.CreateTranslation (offset);
+				controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
+				controlsText.Print (transform, "<- Press [Left]", QFontAlignment.Left);
 				//	GL.PopMatrix();
 			}
-			//	QFont.End();
 		}
 
 		protected override void OnRenderFrame(FrameEventArgs e)

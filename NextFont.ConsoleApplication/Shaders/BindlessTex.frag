@@ -11,7 +11,7 @@ struct TextureHandle
 struct SentanceBlock 
 {
 	TextureHandle Handle;
-	vec4 Color;
+	vec4 Colour;
 	mat4 Transform;
 };
 layout(binding = 0, std430) buffer CB0

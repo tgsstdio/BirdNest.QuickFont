@@ -41,10 +41,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Example.cs" />
     <Compile Include="ShaderManager.cs" />
-    <Compile Include="IVertexAttributeBinding.cs" />
-    <Compile Include="IntAttributeBinding.cs" />
-    <Compile Include="FloatAttributeBinding.cs" />
-    <Compile Include="VertexBuffer.cs" />
     <Compile Include="SentanceBlockStorageBuffer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

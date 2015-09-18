@@ -109,11 +109,11 @@ namespace NextFont
 			if (config.CharacterOutput == null)
 				return;
 
-			FontRenderer = config.FontGlyphRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, fontData, Vector3.Zero, Color4.White);
+			FontRenderer = config.FontGlyphRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, fontData, Vector3.Zero, new Vector4(1,1,1,1));
 
 			if (DropShadow != null)
 			{
-				DropShadow.FontRenderer = config.DropShadowRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, DropShadow.fontData, Vector3.Zero, Color4.White);
+				DropShadow.FontRenderer = config.DropShadowRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, DropShadow.fontData, Vector3.Zero, new Vector4(1,1,1,1));
 			}
 		}
 
@@ -701,12 +701,12 @@ namespace NextFont
 		{
 			if (FontRenderer != null)
 			{
-				FontRenderer.Colour = Options.Colour;		
+				FontRenderer.Colour = new Vector4(Options.Colour.R, Options.Colour.G, Options.Colour.B, Options.Colour.A);		
 				FontRenderer.Transform = transform;
 			}
 			if (DropShadow != null && DropShadow.FontRenderer != null)
 			{
-				DropShadow.FontRenderer.Colour = new Color4(1,1,1, Options.DropShadowOpacity);
+				DropShadow.FontRenderer.Colour = new Vector4(1,1,1, Options.DropShadowOpacity);
 				DropShadow.FontRenderer.Transform = transform;
 			}
 		}

@@ -55,6 +55,10 @@
     <Compile Include="DrawElementsIndirectCommand.cs" />
     <Compile Include="IDrawCommandList.cs" />
     <Compile Include="DrawCommandList.cs" />
+    <Compile Include="VertexBuffer.cs" />
+    <Compile Include="FloatAttributeBinding.cs" />
+    <Compile Include="IntAttributeBinding.cs" />
+    <Compile Include="IVertexAttributeBinding.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

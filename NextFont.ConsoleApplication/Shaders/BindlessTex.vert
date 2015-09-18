@@ -11,7 +11,7 @@ struct TextureHandle
 struct SentanceBlock 
 {
 	TextureHandle Handle;
-	vec4 Color;
+	vec4 Colour;
 	mat4 Transform;
 };
 
@@ -32,7 +32,7 @@ void main(void)
 {
 	uv = in_texCoords;
 	materialIndex = in_drawId;
-	blendColor = sentances[in_drawId].Color;
+	blendColor = sentances[in_drawId].Colour;
 	//sentances[materialIndex].Transform * 
 	gl_Position = vec4(in_position, 0, 1);
 }

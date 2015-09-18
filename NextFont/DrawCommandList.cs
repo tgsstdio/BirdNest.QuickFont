@@ -26,13 +26,13 @@ namespace NextFont
 			mIndices.Clear ();
 		}
 
-		void AddDrawCommand (IList<uint> indicesChunk, int totalIndices, int totalVertices, uint currentBlock)
+		void AddDrawCommand (IList<uint> indicesChunk, uint firstIndex, uint baseVertex, uint currentBlock)
 		{
 			var command = new DrawElementsIndirectCommand ();
 			command.Count = (uint)indicesChunk.Count;
 			command.InstanceCount = 1;
-			command.FirstIndex = (uint)totalIndices;
-			command.BaseVertex = (uint)totalVertices;
+			command.FirstIndex = firstIndex;
+			command.BaseVertex = baseVertex;
 			// IMPORTANT - controls material index
 			command.BaseInstance = currentBlock;
 			mDrawCommands.Add (command);
@@ -41,9 +41,9 @@ namespace NextFont
 		void AddSentanceBlock (TextureHandle handle, Vector4 fontColor, Matrix4 transform)
 		{
 			var block = new SentanceBlock {
-				Color = fontColor,
+				Colour = fontColor,
 				Transform = transform,
-				Texture = handle,
+				Handle = handle,
 			};
 			mBlocks.Add (block);
 		}
@@ -60,16 +60,15 @@ namespace NextFont
 
 		public void RenderChunk(TextureHandle handle, Vector4 fontColor, Matrix4 transform, List<float> vertexChunk, List<uint> indicesChunk)
 		{
-			var totalIndices = mIndices.Count;
-			var totalVertices = mVertexData.Count;
+			uint firstIndex = (uint)mIndices.Count;
+			uint baseVertex = (uint)mVertexData.Count;
 			uint currentBlock = (uint)mBlocks.Count;
 
 			AddVertices (vertexChunk);
 			AddIndices (indicesChunk);
 
 			AddSentanceBlock (handle, fontColor, transform);
-			AddDrawCommand (indicesChunk, totalIndices, totalVertices, currentBlock);
-
+			AddDrawCommand (indicesChunk, firstIndex, baseVertex, currentBlock);
 		}
 	}
 }

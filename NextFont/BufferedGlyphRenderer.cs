@@ -17,11 +17,11 @@ namespace NextFont
 		private readonly QFontData mFontData;
 		private Vector3 PrintOffset;
 
-		public Color4 Colour {get;set;}
+		public Vector4 Colour {get;set;}
 
 		private readonly SentanceBlockInfo[] mDestinations;
 		private readonly IDrawCommandList mCommandBuffer;
-		public BufferedGlyphRenderer (IDrawCommandList commandBuffer, QFontData fontData, Vector3 printOffset, Color4 fontColor)
+		public BufferedGlyphRenderer (IDrawCommandList commandBuffer, QFontData fontData, Vector3 printOffset, Vector4 fontColor)
 		{
 			mFontData = fontData;
 			mCharacters = new List<GlyphKey> ();
@@ -34,16 +34,24 @@ namespace NextFont
 
 		private void InitialiseDestinations()
 		{
-
+			for (int i = 0; i < mFontData.Pages.Length; ++i)
+			{
+				mDestinations [i] = new SentanceBlockInfo ();
+				var handle = new TextureHandle ();
+				handle.Texture = mFontData.Pages [i].Resident;
+				handle.Slice = 0;
+				handle.Index = 0;
+				mDestinations[i].Handle = handle;
+			}
 		}
 
 		private class SentanceBlockInfo
 		{
-			public SentanceBlock BlockInfo;
+			public TextureHandle Handle;
 			public List<float> Vertices { get; private set; }
 			public List<uint> Indices { get; private set; }
 			private uint mNextIndex;
-			private uint mNoOfTriangles;
+			public uint NoOfTriangles { get; private set; }
 			public SentanceBlockInfo()
 			{
 				Vertices = new List<float>();
@@ -55,7 +63,7 @@ namespace NextFont
 				Vertices.Clear ();
 				Indices.Clear ();
 				mNextIndex = 0;
-				mNoOfTriangles = 0;
+				NoOfTriangles = 0;
 			}
 
 			public void AddTriangle(uint a, uint b, uint c)
@@ -63,7 +71,7 @@ namespace NextFont
 				Indices.Add (a);
 				Indices.Add (b);
 				Indices.Add (c);
-				++mNoOfTriangles;
+				++NoOfTriangles;
 			}
 
 			public uint AddVertex(Vector3 pos, Vector2 tx)
@@ -127,7 +135,6 @@ namespace NextFont
 				var v3 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset + glyph.rect.Height, 0);
 				var v4 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset, 0);
 
-				dest.BlockInfo.Color = new Vector4(Colour.R, Colour.G, Colour.B, Colour.A);
 				var t1_0 = dest.AddVertex(v1, tv1);
 				var t1_1 = dest.AddVertex(v2, tv2);
 				var t1_2 = dest.AddVertex(v3, tv3);
@@ -141,9 +148,9 @@ namespace NextFont
 
 			foreach(var dest in mDestinations)
 			{
-				mCommandBuffer.RenderChunk (dest.BlockInfo.Texture,
-					dest.BlockInfo.Color,
-					dest.BlockInfo.Transform,
+				mCommandBuffer.RenderChunk (dest.Handle,
+					Colour,
+					Transform,
 					dest.Vertices,
 					dest.Indices);
 					

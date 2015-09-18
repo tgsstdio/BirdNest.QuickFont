@@ -5,7 +5,7 @@ namespace NextFont
 	[StructLayout(LayoutKind.Sequential)]	
 	public struct TextureHandle
 	{
-		public long TextureId {get;set;}
+		public long Texture	{get;set;}
 		public uint Index {get;set;}
 		public float Slice {get;set;}
 	}
