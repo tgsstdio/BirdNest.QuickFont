@@ -41,7 +41,6 @@
     <Compile Include="CharacterBuffer.cs" />
     <Compile Include="NxFont.cs" />
     <Compile Include="NxFontBuilderConfiguration.cs" />
-    <Compile Include="BindlessTextureHandle.cs" />
     <Compile Include="NxFontLoaderConfiguration.cs" />
     <Compile Include="TripleBufferLock.cs" />
     <Compile Include="BufferLock.cs" />
@@ -55,10 +54,11 @@
     <Compile Include="DrawElementsIndirectCommand.cs" />
     <Compile Include="IDrawCommandList.cs" />
     <Compile Include="DrawCommandList.cs" />
-    <Compile Include="VertexBuffer.cs" />
     <Compile Include="FloatAttributeBinding.cs" />
     <Compile Include="IntAttributeBinding.cs" />
     <Compile Include="IVertexAttributeBinding.cs" />
+    <Compile Include="TextVertexBuffer.cs" />
+    <Compile Include="TextureHandle.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
