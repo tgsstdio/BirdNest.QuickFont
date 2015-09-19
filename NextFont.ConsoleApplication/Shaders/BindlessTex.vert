@@ -20,7 +20,7 @@ layout(binding = 0, std430) buffer CB0
 	SentanceBlock sentances[];
 };
 
-layout(location = 0) in vec2 in_position;
+layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec2 in_texCoords;
 layout(location = 2) in uint in_drawId;
 
@@ -32,9 +32,10 @@ void main(void)
 {
 	uv = in_texCoords;
 	materialIndex = in_drawId;
+
+//	vec4 image = texture(sentances[materialIndex].Handle.Texture, uv);
 	blendColor = sentances[in_drawId].Colour;
-	//sentances[materialIndex].Transform * 
-	gl_Position = vec4(in_position, 0, 1);
+	gl_Position =  sentances[materialIndex].Transform * vec4(in_position, 1);
 }
 
 

@@ -259,6 +259,15 @@ namespace NextFont.ConsoleApplication
 			GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			GL.Disable(EnableCap.DepthTest);
 
+			GenerateText ();
+
+//			var textOutput = singleDrawCommand.AsStaticText ();
+//			var textCommands = singleDrawCommand.GetCommands ();
+//			var bufferArray = singleDrawCommand.Blocks.ToArray ();
+//			var textSSBO = new SentanceBlockStorageBuffer (bufferArray, BufferUsageHint.StaticDraw);
+//
+//			pageOne = new TextOutput (textOutput, textCommands, textSSBO);
+
 			vertexBuffer = GL.GenBuffer ();
 			GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
 			GL.BufferData<float> (BufferTarget.ArrayBuffer, (IntPtr)(sizeof(float) * vertexData.Length), vertexData, BufferUsageHint.StaticDraw);
@@ -286,11 +295,11 @@ namespace NextFont.ConsoleApplication
 			//GL.BindVertexArray (vbo);
 			//CheckGLError ();
 
-			int elementCount = 2;
+			int elementCount = 3;
 			int size = elementCount * sizeof(float);
 			int location = POSITION;
 
-			vbo = new VertexBuffer ();
+			vbo = new TextVertexBuffer ();
 			vbo.in_position.Buffer = vertexBuffer;
 			vbo.in_position.Location = location;
 			vbo.in_position.Elements =	elementCount;
@@ -328,10 +337,10 @@ namespace NextFont.ConsoleApplication
 			vbo.Initialise (elementBuffer);
 
 			sentances = new SentanceBlock[4];
-			sentances [0] = new SentanceBlock{ Colour = new Vector4 (0.5f, 0.5f, 0.5f, 0.5f) };
-			sentances [1] = new SentanceBlock{ Colour = new Vector4 (1, 0, 0, 1) };
-			sentances [2] = new SentanceBlock{ Colour = new Vector4 (0, 1, 0, 1) };
-			sentances [3] = new SentanceBlock{ Colour = new Vector4 (0, 0, 1, 1) };
+			sentances [0] = new SentanceBlock{ Colour = new Vector4 (0.5f, 0.5f, 0.5f, 0.5f), Transform = Matrix4.Identity };
+			sentances [1] = new SentanceBlock{ Colour = new Vector4 (1, 0, 0, 1) , Transform = Matrix4.Identity };
+			sentances [2] = new SentanceBlock{ Colour = new Vector4 (0, 1, 0, 1) , Transform = Matrix4.Identity };
+			sentances [3] = new SentanceBlock{ Colour = new Vector4 (0, 0, 1, 1) , Transform = Matrix4.Identity };
 
 			ssbo = new SentanceBlockStorageBuffer (sentances, BufferUsageHint.StaticRead);
 			//	GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
@@ -395,8 +404,6 @@ namespace NextFont.ConsoleApplication
 				GL.BindVertexArray (0);
 				GL.UseProgram (0);
 			}
-
-			GenerateText ();
 		}
 
 		void InitialiseUnload ()
@@ -408,12 +415,14 @@ namespace NextFont.ConsoleApplication
 				GL.DeleteBuffer (vertexBuffer);
 				vbo.Dispose();
 				ssbo.Dispose();
+				//pageOne.Dispose();
 			};
 		}
 
 		public int programID;
 
-		public VertexBuffer vbo;
+		public TextOutput pageOne;
+		public TextVertexBuffer vbo;
 		public SentanceBlock[] sentances;
 		public SentanceBlockStorageBuffer ssbo;
 		public int vertexBuffer;
@@ -421,16 +430,16 @@ namespace NextFont.ConsoleApplication
 		public int elementBuffer;
 
 		private float[] vertexData = {
-			-1f, -1f,
+			-1f, -1f, 0,
 			1.0f, 1.0f,
 
-			0.9f, -1f,
+			0.9f, -1f, 0,
 			0.9f, 0.9f,
 
-			1f, 1f,
+			1f, 1f, 0,
 			0.9f, 0.9f,
 
-			-1f, 0.9f,
+			-1f, 0.9f, 0,
 			0.9f, 0.9f,
 		};
 
@@ -473,6 +482,8 @@ namespace NextFont.ConsoleApplication
 					var transform1 = Matrix4.CreateTranslation (offset1);
 					heading1.Print (transform1, "QuickFont", QFontAlignment.Centre);
 					yOffset += heading1.Measure (ClientRectangle, "QuickFont").Height;
+
+					/**
 					//GL.PopMatrix();
 					//GL.PushMatrix();
 					var offset2 = new Vector3 (20f, yOffset, 0f);
@@ -486,6 +497,8 @@ namespace NextFont.ConsoleApplication
 					mainText.SafePrint (transform3, ClientRectangle, introduction, Width - 60, QFontAlignment.Justify);
 					//GL.PopMatrix();
 					//QFont.End();
+
+					**/
 				}
 				break;
 			case 2:
@@ -703,13 +716,14 @@ namespace NextFont.ConsoleApplication
 			commands [0].FirstIndex = 0;
 			commands [0].BaseVertex = 0;
 			// IMPORTANT - controls material index
-			commands [0].BaseInstance = 1;
+			commands [0].BaseInstance = 0;
 //
 //			GL.UseProgram(programID);
 //			CheckGLError ();
 //
 ////			GL.BindVertexArray (0);
-			vbo.Bind();
+	  		vbo.Bind();
+			ssbo.Bind ();
 			//GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
 //			CheckGLError ();
 //			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
@@ -725,11 +739,18 @@ namespace NextFont.ConsoleApplication
 				commands,
 				commands.Length,
 				stride);
+//
+
 //			GL.DrawArrays(PrimitiveType.Triangles, 
 //				0,
 //				2);
 		//	GL.UseProgram(programID);
 			vbo.Unbind();
+	//		ssbo.Unbind ();
+
+			//pageOne.Bind ();
+			//pageOne.Render ();
+			//pageOne.Unbind ();
 			//GL.DrawElements(PrimitiveType.Triangles, elementData.Length, DrawElementsType.UnsignedInt, 0);
 			GL.UseProgram(0);
 			//CheckGLError ();

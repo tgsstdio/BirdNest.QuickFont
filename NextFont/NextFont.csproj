@@ -59,6 +59,8 @@
     <Compile Include="IVertexAttributeBinding.cs" />
     <Compile Include="TextVertexBuffer.cs" />
     <Compile Include="TextureHandle.cs" />
+    <Compile Include="TextOutput.cs" />
+    <Compile Include="SentanceBlockStorageBuffer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

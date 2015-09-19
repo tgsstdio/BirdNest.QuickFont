@@ -1,7 +1,7 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
 
-namespace NextFont.ConsoleApplication
+namespace NextFont
 {
 	public class FloatAttributeBinding : IVertexAttributeBinding
 	{
@@ -41,6 +41,47 @@ namespace NextFont.ConsoleApplication
 		public int Elements { get; set; }
 		public int Stride { get; set; }
 		public IntPtr Offset { get; set; }
+
+		#region IDisposable implementation
+
+		~ FloatAttributeBinding(){
+			Dispose(false);
+		}
+
+		public void Dispose ()
+		{
+			Dispose (true);
+			GC.SuppressFinalize(this);
+		}
+
+		void ReleaseUnmanagedResources ()
+		{
+			GL.DeleteBuffer (Buffer);
+		}
+
+		void ReleaseManagedResources()
+		{
+
+		}
+
+		private bool mDisposed = false;
+		protected virtual void Dispose(bool disposing)
+		{
+			if (mDisposed)
+			{
+				return;
+			}
+
+			ReleaseUnmanagedResources ();
+			if (disposing)
+			{
+				ReleaseManagedResources ();
+			}
+
+			mDisposed = true;
+		}
+
+		#endregion
 	}
 }
 

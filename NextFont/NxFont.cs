@@ -701,11 +701,13 @@ namespace NextFont
 		{
 			if (FontRenderer != null)
 			{
+				FontRenderer.Reset ();
 				FontRenderer.Colour = new Vector4(Options.Colour.R, Options.Colour.G, Options.Colour.B, Options.Colour.A);		
 				FontRenderer.Transform = transform;
 			}
 			if (DropShadow != null && DropShadow.FontRenderer != null)
 			{
+				DropShadow.FontRenderer.Reset ();
 				DropShadow.FontRenderer.Colour = new Vector4(1,1,1, Options.DropShadowOpacity);
 				DropShadow.FontRenderer.Transform = transform;
 			}

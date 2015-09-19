@@ -1,13 +1,13 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
 
-namespace NextFont.ConsoleApplication
+namespace NextFont
 {
-	public class VertexBuffer : IDisposable
+	public class TextVertexBuffer : IDisposable
 	{
-		public VertexBuffer ()
+		public TextVertexBuffer ()
 		{
-			in_position = new FloatAttributeBinding ("in_position", 0, 2);
+			in_position = new FloatAttributeBinding ("in_position", 0, 3);
 			in_texCoords = new FloatAttributeBinding ("in_texCoords", 1, 2);
 			in_drawID = new IntAttributeBinding ("in_drawID", 2, 1);
 			ArrayId = GL.GenVertexArray();
@@ -27,7 +27,7 @@ namespace NextFont.ConsoleApplication
 
 		#region IDisposable implementation
 
-		~ VertexBuffer(){
+		~ TextVertexBuffer(){
 			Dispose(false);
 		}
 
@@ -44,7 +44,9 @@ namespace NextFont.ConsoleApplication
 
 		void ReleaseManagedResources()
 		{
-
+			in_position.Dispose ();
+			in_texCoords.Dispose ();
+			in_drawID.Dispose ();
 		}
 
 		private bool mDisposed = false;

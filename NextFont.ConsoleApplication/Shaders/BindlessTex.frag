@@ -3,7 +3,7 @@
 
 struct TextureHandle
 {
-	sampler2D Handle;
+	sampler2D Texture;
 	uint Index;
 	float Slice;
 };
@@ -27,6 +27,6 @@ out vec4 fragColor;
 
 void main()
 {
-	//vec4 image = texture(sentances[materialIndex].Handle, uv);
+	//vec4 image = texture(sentances[materialIndex].Handle.Texture, uv);
 	fragColor = blendColor;
 }

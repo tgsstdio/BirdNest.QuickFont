@@ -1,8 +1,8 @@
 using System;
 
-namespace NextFont.ConsoleApplication
+namespace NextFont
 {
-	public interface IVertexAttributeBinding
+	public interface IVertexAttributeBinding : IDisposable
 	{
 		string Name  {get; }
 		int Buffer { get; set; }

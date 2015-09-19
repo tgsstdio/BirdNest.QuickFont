@@ -50,7 +50,7 @@ namespace NextFont
 			public TextureHandle Handle;
 			public List<float> Vertices { get; private set; }
 			public List<uint> Indices { get; private set; }
-			private uint mNextIndex;
+			public uint VertexIndex { get; private set; }
 			public uint NoOfTriangles { get; private set; }
 			public SentanceBlockInfo()
 			{
@@ -62,7 +62,7 @@ namespace NextFont
 			{
 				Vertices.Clear ();
 				Indices.Clear ();
-				mNextIndex = 0;
+				VertexIndex = 0;
 				NoOfTriangles = 0;
 			}
 
@@ -81,8 +81,8 @@ namespace NextFont
 				Vertices.Add (pos.Z);
 				Vertices.Add (tx.X);
 				Vertices.Add (tx.Y);
-				var currentIndex = mNextIndex;
-				++mNextIndex;
+				var currentIndex = VertexIndex;
+				++VertexIndex;
 				return currentIndex;
 			}
 		}
@@ -151,6 +151,7 @@ namespace NextFont
 				mCommandBuffer.RenderChunk (dest.Handle,
 					Colour,
 					Transform,
+					dest.VertexIndex,
 					dest.Vertices,
 					dest.Indices);
 					
