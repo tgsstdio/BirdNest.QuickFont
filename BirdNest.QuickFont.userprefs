@@ -1,22 +1,22 @@
 ﻿<Properties StartupItem="NextFont.ConsoleApplication\NextFont.ConsoleApplication.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Shaders\BindlessTex.vert">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NextFont.ConsoleApplication\Shaders\BindlessTex.frag">
     <Files>
       <File FileName="NextFont\IVertexAttributeBinding.cs" Line="1" Column="1" />
-      <File FileName="NextFont\TextVertexBuffer.cs" Line="95" Column="18" />
+      <File FileName="NextFont\TextVertexBuffer.cs" Line="1" Column="1" />
       <File FileName="NextFont\IDrawCommandList.cs" Line="1" Column="1" />
       <File FileName="NextFont\DrawCommandList.cs" Line="1" Column="1" />
       <File FileName="NextFont.ConsoleApplication\Shaders\multi-draw-indirect.vert" Line="1" Column="1" />
-      <File FileName="NextFont\FloatAttributeBinding.cs" Line="28" Column="3" />
+      <File FileName="NextFont\FloatAttributeBinding.cs" Line="1" Column="1" />
       <File FileName="NextFont\IntAttributeBinding.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\ShaderManager.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\ShaderManager.cs" Line="44" Column="1" />
       <File FileName="NextFont\INxFontLoader.cs" Line="1" Column="1" />
       <File FileName="NextFont\TextOutput.cs" Line="1" Column="1" />
       <File FileName="NextFont\SentanceBlock.cs" Line="1" Column="1" />
-      <File FileName="NextFont\SentanceBlockStorageBuffer.cs" Line="30" Column="4" />
-      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont\BufferedGlyphRenderer.cs" Line="151" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="6" Column="20" />
-      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="35" Column="2" />
+      <File FileName="NextFont\SentanceBlockStorageBuffer.cs" Line="1" Column="1" />
+      <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\NextFont\BufferedGlyphRenderer.cs" Line="1" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.frag" Line="31" Column="19" />
+      <File FileName="NextFont.ConsoleApplication\Shaders\BindlessTex.vert" Line="31" Column="16" />
       <File FileName="NextFont.ConsoleApplication\Program.cs" Line="1" Column="1" />
       <File FileName="NextFont\NxFont.cs" Line="1" Column="1" />
       <File FileName="NextFont\IGlyphRenderer.cs" Line="1" Column="1" />
@@ -25,7 +25,7 @@
       <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\QuickFont\Helper.cs" Line="1" Column="1" />
       <File FileName="d:\Projects\TechDemos\BirdNest.QuickFont\QuickFont\QFontData.cs" Line="1" Column="1" />
       <File FileName="NextFont\NxFontBuilderConfiguration.cs" Line="1" Column="1" />
-      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="846" Column="1" />
+      <File FileName="NextFont.ConsoleApplication\Example.cs" Line="633" Column="25" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

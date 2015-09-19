@@ -27,6 +27,13 @@ out vec4 fragColor;
 
 void main()
 {
-	//vec4 image = texture(sentances[materialIndex].Handle.Texture, uv);
-	fragColor = blendColor;
+	vec4 finalColour = blendColor;
+	uvec2 handleCheck = uvec2(sentances[materialIndex].Handle.Texture);
+
+	if (any(notEqual(uvec2(0,0), handleCheck)))
+	{
+		vec4 image = texture(sentances[materialIndex].Handle.Texture, uv);
+		finalColour = image * finalColour;
+	}
+	fragColor = finalColour;
 }
