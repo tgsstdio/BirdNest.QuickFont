@@ -2,11 +2,12 @@
 using OpenTK.Graphics.OpenGL;
 using System.Runtime.InteropServices;
 
-namespace NextFont.ConsoleApplication
+namespace NextFont
 {
 	public class SentanceBlockStorageBuffer : IDisposable
 	{
 		public int BufferId { get; private set; }
+		public int Index { get; private set; }
 
 		public SentanceBlockStorageBuffer(SentanceBlock[] blocks, BufferUsageHint hint)
 		{
@@ -14,15 +15,19 @@ namespace NextFont.ConsoleApplication
 			BufferId = GL.GenBuffer();
 			// manually set
 			const int BUFFER_INDEX = 0;
-			GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, BUFFER_INDEX, BufferId);
+			Index = BUFFER_INDEX;
+			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, BufferId);
+			GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, Index, BufferId);
 			var structSize = Marshal.SizeOf (typeof(SentanceBlock));
 
 			var bufferSize = (IntPtr) (blocks.Length * structSize);
 			GL.BufferData<SentanceBlock>(BufferTarget.ShaderStorageBuffer, bufferSize, blocks, hint);
+			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, 0);
 		}
 
 		public void Bind()
 		{
+			GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, Index, BufferId);
 			GL.BindBuffer(BufferTarget.ShaderStorageBuffer, BufferId);
 		}
 

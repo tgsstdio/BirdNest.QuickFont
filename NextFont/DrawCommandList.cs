@@ -66,10 +66,7 @@ namespace NextFont
 
 		void AddDrawIDs (uint currentBlock, int triCount)
 		{
-			for(int i = 0; i < triCount; ++i)
-			{
-				mDrawIDs.Add (currentBlock);
-			}
+			mDrawIDs.Add (currentBlock);
 		}
 
 		public void RenderChunk(TextureHandle handle, Vector4 fontColor, Matrix4 transform, uint noOfVertices, List<float> vertexChunk, List<uint> indicesChunk)

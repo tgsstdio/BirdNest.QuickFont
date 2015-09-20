@@ -1,5 +1,4 @@
 ﻿using System;
-using NextFont.ConsoleApplication;
 using OpenTK.Graphics.OpenGL;
 
 namespace NextFont
@@ -24,7 +23,13 @@ namespace NextFont
 
 		public void Bind()
 		{
+			Storage.Bind ();
 			TextBuffer.Bind ();
+		}
+
+		public void BindManually(int programID)
+		{
+			TextBuffer.BindManually (programID);
 		}
 
 		public void Render()
@@ -39,6 +44,7 @@ namespace NextFont
 
 		public void Unbind()
 		{
+			Storage.Unbind ();
 			TextBuffer.Unbind ();
 		}
 

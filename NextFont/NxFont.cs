@@ -97,23 +97,20 @@ namespace NextFont
 			if (transToVp != null)
 				Options.TransformToViewport = transToVp;
 
-			// Replace
-//			if(config.UseVertexBuffer)
-//				InitVBOs();
-			InitialiseVBOs(config);
+			InitialiseGlyphRenderer(config.CharacterOutput, config.FontGlyphRenderer, config.DropShadowRenderer);
 		}
 
-		public IGlyphRenderer FontRenderer {get;set;}
-		private void InitialiseVBOs(NxFontBuilderConfiguration config)
+		private IGlyphRenderer FontRenderer {get;set;}
+		public void InitialiseGlyphRenderer(IDrawCommandList commandList, IGlyphRenderer mainFont, IGlyphRenderer dropShadow)
 		{			
-			if (config.CharacterOutput == null)
+			if (commandList == null)
 				return;
 
-			FontRenderer = config.FontGlyphRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, fontData, Vector3.Zero, new Vector4(1,1,1,1));
+			FontRenderer = mainFont ?? new BufferedGlyphRenderer (commandList, fontData, Vector3.Zero, new Vector4(1,1,1,1));
 
 			if (DropShadow != null)
 			{
-				DropShadow.FontRenderer = config.DropShadowRenderer ?? new BufferedGlyphRenderer (config.CharacterOutput, DropShadow.fontData, Vector3.Zero, new Vector4(1,1,1,1));
+				DropShadow.FontRenderer = dropShadow ?? new BufferedGlyphRenderer (commandList, DropShadow.fontData, Vector3.Zero, new Vector4(1,1,1,1));
 			}
 		}
 
@@ -850,17 +847,11 @@ namespace NextFont
 			}
 		}
 
-		private void RenderDropShadow(float xOffset, float yOffset, char c, QFontGlyph nonShadowGlyph)
+		private void RenderDropShadow(float x, float y, char c, QFontGlyph nonShadowGlyph)
 		{
 			//note can cast drop shadow offset to int, but then you can't move the shadow smoothly...
 			if (DropShadow != null && Options.DropShadowActive)
 			{
-				//note: it's not immediately obvious, but this combined with the paramteters to 
-				//RenderGlyph for the shadow mean that we render the shadow centrally (despite it being a different size)
-				//under the glyph
-				float x = xOffset + (int)(nonShadowGlyph.rect.Width * 0.5f);
-				float y = yOffset + (int)(nonShadowGlyph.rect.Height * 0.5f + nonShadowGlyph.yOffset);
-
 				//make sure fontdata font's options are synced with the actual options
 				if (DropShadow.Options != Options)
 					DropShadow.Options = Options;

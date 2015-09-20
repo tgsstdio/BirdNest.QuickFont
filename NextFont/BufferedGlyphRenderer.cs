@@ -99,12 +99,31 @@ namespace NextFont
 
 		public void RenderGlyph (float x, float y, char c, bool isDropShadow)
 		{
+			if (isDropShadow) 
+			{
+				var glyph = mFontData.CharSetMapping[c];
+				x -= (int)(glyph.rect.Width * 0.5f);
+				y -= (int)(glyph.rect.Height * 0.5f + glyph.yOffset);
+			}
+
 			mCharacters.Add (new GlyphKey{ X = x, Y = y, Key = c });
 		}
 
 		public void Reset ()
 		{
 			mCharacters.Clear ();
+		}
+
+		void ShaderlessTransform (ref Vector3 v0, ref Vector3 v1, ref Vector3 v2, ref Vector3 v3)
+		{
+			var other0 = Vector4.Transform (new Vector4 (v0, 1), Transform);
+			var other1 = Vector4.Transform (new Vector4 (v1, 1), Transform);
+			var other2 = Vector4.Transform (new Vector4 (v2, 1), Transform);
+			var other3 = Vector4.Transform (new Vector4 (v3, 1), Transform);
+			v0 = other0.Xyz;
+			v1 = other1.Xyz;
+			v2 = other2.Xyz;
+			v3 = other3.Xyz;
 		}
 
 		public void Flush ()
@@ -130,18 +149,21 @@ namespace NextFont
 				var tv3 = new Vector2(tx2, ty2);
 				var tv4 = new Vector2(tx2, ty1);
 
-				var v1 = PrintOffset + new Vector3(x, y + glyph.yOffset, 0);
-				var v2 = PrintOffset + new Vector3(x, y + glyph.yOffset + glyph.rect.Height, 0);
-				var v3 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset + glyph.rect.Height, 0);
-				var v4 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset, 0);
+				var v0 = PrintOffset + new Vector3(x, y + glyph.yOffset, 0);
+				var v1 = PrintOffset + new Vector3(x, y + glyph.yOffset + glyph.rect.Height, 0);
+				var v2 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset + glyph.rect.Height, 0);
+				var v3 = PrintOffset + new Vector3(x + glyph.rect.Width, y + glyph.yOffset, 0);
 
-				var t1_0 = dest.AddVertex(v1, tv1);
-				var t1_1 = dest.AddVertex(v2, tv2);
-				var t1_2 = dest.AddVertex(v3, tv3);
+				// UNCOMMENT TO WHEN RENDERING WITHOUT VERTEX SHADER
+				//ShaderlessTransform (ref v0, ref v1, ref v2, ref v3);
+
+				var t1_0 = dest.AddVertex(v0, tv1);
+				var t1_1 = dest.AddVertex(v1, tv2);
+				var t1_2 = dest.AddVertex(v2, tv3);
 
 				dest.AddTriangle (t1_0, t1_1, t1_2);
 
-				var t1_3 = dest.AddVertex(v4, tv4);
+				var t1_3 = dest.AddVertex(v3, tv4);
 
 				dest.AddTriangle (t1_0, t1_2, t1_3);
 			}

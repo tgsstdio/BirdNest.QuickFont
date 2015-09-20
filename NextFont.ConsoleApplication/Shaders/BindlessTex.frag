@@ -28,12 +28,22 @@ out vec4 fragColor;
 void main()
 {
 	vec4 finalColour = blendColor;
-	uvec2 handleCheck = uvec2(sentances[materialIndex].Handle.Texture);
+	sampler2D currentSampler = sentances[materialIndex].Handle.Texture;
 
+	uvec2 handleCheck = uvec2(currentSampler);
+
+	// only perform texture lookup if not null
 	if (any(notEqual(uvec2(0,0), handleCheck)))
 	{
-		vec4 image = texture(sentances[materialIndex].Handle.Texture, uv);
-		finalColour = image * finalColour;
+		vec4 image = texture(currentSampler, uv);
+		if (image.a <= 0)
+		{
+			discard;
+		}
+		else
+		{
+			finalColour = image * finalColour;
+		}
 	}
 	fragColor = finalColour;
 }

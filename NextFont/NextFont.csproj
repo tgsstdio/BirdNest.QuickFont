@@ -44,7 +44,6 @@
     <Compile Include="NxFontLoaderConfiguration.cs" />
     <Compile Include="TripleBufferLock.cs" />
     <Compile Include="BufferLock.cs" />
-    <Compile Include="NxFontData.cs" />
     <Compile Include="IGlyphRenderer.cs" />
     <Compile Include="BufferedGlyphRenderer.cs" />
     <Compile Include="INxFontLoader.cs" />

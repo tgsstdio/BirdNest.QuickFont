@@ -72,6 +72,8 @@ namespace NextFont
 			if (transToVp != null)
 				qfont.Options.TransformToViewport = transToVp;
 
+			qfont.InitialiseGlyphRenderer(loaderConfig.CharacterOutput, loaderConfig.FontGlyphRenderer, loaderConfig.DropShadowRenderer);
+
 			return qfont;
 		}
 	}

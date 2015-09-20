@@ -9,7 +9,7 @@ namespace NextFont
 		{
 			in_position = new FloatAttributeBinding ("in_position", 0, 3);
 			in_texCoords = new FloatAttributeBinding ("in_texCoords", 1, 2);
-			in_drawID = new IntAttributeBinding ("in_drawID", 2, 1);
+			in_drawID = new IntAttributeBinding ("in_drawId", 2, 1);
 			ArrayId = GL.GenVertexArray();
 		}
 
