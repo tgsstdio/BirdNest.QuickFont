@@ -223,23 +223,19 @@ namespace NextFont.ConsoleApplication
 			var heading2Config = new NxFontLoaderConfiguration (singleDrawCommand, screenMatrix, true);
 			heading2 = fontFileLoader.Load("woodenFont.qfont", Height, 1.0f, heading2Config);
 
-			var builderConfig = new NxFontBuilderConfiguration(screenMatrix, true);
-			builderConfig.CharacterOutput = singleDrawCommand;
-			builderConfig.ShadowConfig.blurRadius = 1; //reduce blur radius because font is very small
+			var builderConfig = new NxFontBuilderConfiguration(singleDrawCommand, screenMatrix, true);
+			builderConfig.BlurRadius = 1; //reduce blur radius because font is very small
 			builderConfig.TextGenerationRenderHint = TextGenerationRenderHint.ClearTypeGridFit; //best render hint for this font
 			mainText = new NxFont("Fonts/times.ttf", 14,  Height, builderConfig);
 
-			var heading1Config = new NxFontBuilderConfiguration(screenMatrix);
-			heading1Config.CharacterOutput = singleDrawCommand;
+			var heading1Config = new NxFontBuilderConfiguration(singleDrawCommand, screenMatrix, true);
 			heading1Config.Transform = screenMatrix;
 			heading1 = new NxFont("Fonts/HappySans.ttf", 72, Height, heading1Config);
 
-			var buildConfig = new NxFontBuilderConfiguration (screenMatrix, true);
-			buildConfig.CharacterOutput = singleDrawCommand;
+			var buildConfig = new NxFontBuilderConfiguration (singleDrawCommand, screenMatrix, true);
 			controlsText = new NxFont("Fonts/HappySans.ttf", 32,  Height, buildConfig);
 
-			var noShadowConfig = new NxFontBuilderConfiguration (screenMatrix);
-			noShadowConfig.CharacterOutput = singleDrawCommand;
+			var noShadowConfig = new NxFontBuilderConfiguration (singleDrawCommand, screenMatrix);
 			codeText = new NxFont("Fonts/Comfortaa-Regular.ttf", 12,  Height, FontStyle.Regular, noShadowConfig);
 
 			heading1.Options.Colour = new Color4(0.2f, 0.2f, 0.2f, 1.0f);
@@ -704,18 +700,18 @@ namespace NextFont.ConsoleApplication
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			//GL.UseProgram(programID);
-			GL.BindVertexArray (0);
+	//		GL.BindVertexArray (0);
 
-//			GL.Begin(PrimitiveType.Quads);
-//				GL.Color3(1.0f, 1.0f, 1.0);
-//				GL.Vertex2(-1f, -1f);
-//				GL.Color3(0.9f, 0.9f, 0.9f);
-//				GL.Vertex2(-1f, 1f);
-//				GL.Color3(0.9f, 0.9f, 0.9f);
-//				GL.Vertex2(1f, 1f);
-//				GL.Color3(0.9f, 0.9f, 0.9f);
-//				GL.Vertex2(1f, -1f);
-//			GL.End();
+			GL.Begin(PrimitiveType.Quads);
+				GL.Color3(1.0f, 1.0f, 1.0);
+				GL.Vertex2(-1f, -1f);
+				GL.Color3(0.9f, 0.9f, 0.9f);
+				GL.Vertex2(-1f, 1f);
+				GL.Color3(0.9f, 0.9f, 0.9f);
+				GL.Vertex2(1f, 1f);
+				GL.Color3(0.9f, 0.9f, 0.9f);
+				GL.Vertex2(1f, -1f);
+			GL.End();
 
 			var commands = new DrawElementsIndirectCommand[1];
 
@@ -732,8 +728,8 @@ namespace NextFont.ConsoleApplication
 //			CheckGLError ();
 //
 ////			GL.BindVertexArray (0);
-	  		vbo.Bind();
-			ssbo.Bind ();
+	  		//vbo.Bind();
+//			ssbo.Bind ();
 			//GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
 //			CheckGLError ();
 //			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
@@ -743,26 +739,29 @@ namespace NextFont.ConsoleApplication
 				GL.UseProgram (programID);
 			}
 
-			GL.MultiDrawElementsIndirect<DrawElementsIndirectCommand>(
-				All.Triangles,
-				All.UnsignedInt,
-				commands,
-				commands.Length,
-				stride);
-//
+//			GL.MultiDrawElementsIndirect<DrawElementsIndirectCommand>(
+//				All.Triangles,
+//				All.UnsignedInt,
+//				commands,
+//				commands.Length,
+//				stride);
+////
 
 //			GL.DrawArrays(PrimitiveType.Triangles, 
 //				0,
 //				2);
 		//	GL.UseProgram(programID);
-			vbo.Unbind();
-			ssbo.Unbind ();
+	//		vbo.Unbind();
+//			ssbo.Unbind ();
+
+			GL.Enable (EnableCap.Blend);
+			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
 			pageOne.Bind ();
 			pageOne.Render ();
 			pageOne.Unbind ();
 
-			GL.PopMatrix ();
+			GL.Disable (EnableCap.Blend);
 
 			//GL.DrawElements(PrimitiveType.Triangles, elementData.Length, DrawElementsType.UnsignedInt, 0);
 			GL.UseProgram(0);

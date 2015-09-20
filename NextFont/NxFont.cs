@@ -83,8 +83,12 @@ namespace NextFont
 			float fontScale;
 			var transToVp = SetupTransformViewport (height, config.TransformToCurrentOrthogProjection, config.Transform, out fontScale);
 
-			var internalConfig = new QFontBuilderConfiguration ();
+			var internalConfig = new QFontBuilderConfiguration (config.AddDropShadow);
 			internalConfig.SuperSampleLevels = config.SuperSampleLevels;
+			if (internalConfig.ShadowConfig != null)
+			{
+				internalConfig.ShadowConfig.blurRadius = config.BlurRadius;
+			}
 			using(var font = new Font(fontFamily, size * fontScale * config.SuperSampleLevels, style)){
 				var builder = new Builder<NxFont>(font, internalConfig);
 				NxFont dropShadowFont;
@@ -92,7 +96,7 @@ namespace NextFont
 				DropShadow = dropShadowFont;
 			}
 
-			if (config.ShadowConfig != null)
+			if (internalConfig.ShadowConfig != null)
 				Options.DropShadowActive = true;
 			if (transToVp != null)
 				Options.TransformToViewport = transToVp;
