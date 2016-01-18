@@ -1,9 +1,5 @@
 # BirdNest.QuickFont
 
- * [AZDO]: Approaching Zero Driver Overhead
- * [VBOs]: Vertex Buffer Objects
- * [SSBO]: Shader Storage Buffer Objects
-
 Attempt to use OpenTK font rendering with AZDO techniques
  - Using forks of QuickFonts as a basis
     - Vertex buffer objects example (https://github.com/swax/QuickFont)
@@ -19,11 +15,12 @@ Attempt to use OpenTK font rendering with AZDO techniques
  - (FUTURE) signed distance fonts
 
 ## Version 0.2
-- All pages are rendered.
+- All pages are rendered. Press Left or Right to move between
 - Transforms used with print MUST uses a matrix made up of modelview and projection/orthogonal matrices
 - TODO 
     - Moving text such as arrows
     - Moving alignment (i.e. Bounds and Justify)	
+
 ## Version 0.1
 - Added working example of Quickfont library using .NET 4.5 
     - Incomplete example (Only page one is displayed & next page does not move)
@@ -54,3 +51,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+*[AZDO]: Approaching Zero Driver Overhead
+*[VBOs]: Vertex Buffer Objects
+*[SSBO]: Shader Storage Buffer Objects
