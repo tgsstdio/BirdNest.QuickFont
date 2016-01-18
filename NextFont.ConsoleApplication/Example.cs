@@ -6,6 +6,7 @@ using System.Drawing;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System.IO;
+using System.Collections.Generic;
 
 namespace NextFont.ConsoleApplication
 {
@@ -111,8 +112,9 @@ namespace NextFont.ConsoleApplication
 		NxFont controlsText;
 		NxFont monoSpaced;
 
-		int currentDemoPage = 1;
-		const int LAST_PAGE = 9;
+		int currentDemoPage = 0;
+		const int FIRST_PAGE = 0;
+		const int LAST_PAGE = 8;
 
 		QFontAlignment cycleAlignment = QFontAlignment.Left;
 		double cnt = 0;
@@ -190,8 +192,8 @@ namespace NextFont.ConsoleApplication
 				if (currentDemoPage > LAST_PAGE)
 					currentDemoPage = LAST_PAGE;
 
-				if (currentDemoPage < 1)
-					currentDemoPage = 1;
+				if (currentDemoPage < FIRST_PAGE)
+					currentDemoPage = FIRST_PAGE;
 			};
 		}
 
@@ -257,93 +259,43 @@ namespace NextFont.ConsoleApplication
 			GL.ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			GL.Disable(EnableCap.DepthTest);
 
-			GenerateText ();
+			mOrthographicMatrix = Matrix4.CreateOrthographicOffCenter (0f, ClientRectangle.Width, ClientRectangle.Height, 0f, -1.0f, 1f);
 
-			var textOutput = singleDrawCommand.AsStaticText ();
-			var textCommands = singleDrawCommand.GetCommands ();
+			GenerateRightArrow ();
+			var rightArrowCommands = singleDrawCommand.GetCommands ();
+			singleDrawCommand.ClearCommandsOnly ();
+
+			GenerateLeftArrow ();
+			var leftArrowCommands = singleDrawCommand.GetCommands ();
+			singleDrawCommand.ClearCommandsOnly ();
+
+
+			var pageCommands = new List<DrawElementsIndirectCommand[]> ();
+			for (int i = FIRST_PAGE; i < MAX_PAGES; ++i)
+			{
+				currentDemoPage = i;
+				GenerateText ();
+				pageCommands.Add (singleDrawCommand.GetCommands ());
+				singleDrawCommand.ClearCommandsOnly ();
+			}
+			currentDemoPage = FIRST_PAGE;
+
+			mSharedVertexBuffer = singleDrawCommand.AsStaticText ();
 			var bufferArray = singleDrawCommand.Blocks.ToArray ();
-			var textSSBO = new SentanceBlockStorageBuffer (bufferArray, BufferUsageHint.StaticDraw);
-
-			pageOne = new TextOutput (textOutput, textCommands, textSSBO);
-
-			vertexBuffer = GL.GenBuffer ();
-			GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
-			GL.BufferData<float> (BufferTarget.ArrayBuffer, (IntPtr)(sizeof(float) * vertexData.Length), vertexData, BufferUsageHint.StaticDraw);
-			GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+			mConstantBuffer = new SentanceBlockStorageBuffer (bufferArray, BufferUsageHint.StaticDraw);
 
 
-			drawIDBuffer = GL.GenBuffer ();
-			GL.BindBuffer (BufferTarget.ArrayBuffer, drawIDBuffer);
-			GL.BufferData<uint> (BufferTarget.ArrayBuffer, (IntPtr)(sizeof(uint) * drawIDData.Length), drawIDData, BufferUsageHint.StaticDraw);
-			GL.BindBuffer (BufferTarget.ArrayBuffer, 0);
+			screenPages = new TextOutput[MAX_PAGES];
+			for (int i = 0; i < MAX_PAGES; ++i)
+			{
+				screenPages[i] = new TextOutput (mSharedVertexBuffer, pageCommands[i], mConstantBuffer); 
+			}
 
-			elementBuffer = GL.GenBuffer ();
-			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
-			GL.BufferData<uint> (BufferTarget.ElementArrayBuffer, (IntPtr)(sizeof(uint) * elementData.Length), elementData, BufferUsageHint.StaticDraw);
-			GL.BindBuffer (BufferTarget.ElementArrayBuffer, 0);
+			leftArrow = new TextOutput (mSharedVertexBuffer, leftArrowCommands, mConstantBuffer);
+			rightArrow = new TextOutput (mSharedVertexBuffer, rightArrowCommands, mConstantBuffer);
 
 
-			const int POSITION = 0;
-			const int IN_TEXTURE = 1;
-			const int DRAW_ID = 2;
 
-			int offset = 0;
-			/// VERTEX
-			//vbo = GL.GenVertexArray();
-			//GL.BindVertexArray (vbo);
-			//CheckGLError ();
-
-			int elementCount = 3;
-			int size = elementCount * sizeof(float);
-			int location = POSITION;
-
-			vbo = new TextVertexBuffer ();
-			vbo.in_position.Buffer = vertexBuffer;
-			vbo.in_position.Location = location;
-			vbo.in_position.Elements =	elementCount;
-			vbo.in_position.Offset = (IntPtr)offset;
-
-			offset += size;
-			elementCount = 2;
-			size = elementCount * sizeof(float);
-			location = IN_TEXTURE;
-
-			vbo.in_texCoords.Buffer = vertexBuffer;
-			vbo.in_texCoords.Location = location;
-			vbo.in_texCoords.Elements =	elementCount;
-			vbo.in_texCoords.Offset = (IntPtr)offset;
-
-			// SHARED BUFFER AT END
-			offset += size;
-			int stride = offset;
-			vbo.in_position.Stride = stride;
-			vbo.in_texCoords.Stride = stride;
-
-			offset = 0;
-			stride = sizeof(uint);
-			elementCount = 1;
-			size = elementCount * sizeof(uint);
-			location = DRAW_ID;
-
-			vbo.in_drawID.Buffer = drawIDBuffer;
-			vbo.in_drawID.Location = location;
-			vbo.in_drawID.Elements = elementCount;
-			vbo.in_drawID.Stride = stride;
-			vbo.in_drawID.Offset = (IntPtr)offset;
-			vbo.in_drawID.Divisor = 3;
-
-			vbo.Initialise (elementBuffer);
-
-			sentances = new SentanceBlock[4];
-			sentances [0] = new SentanceBlock{ Colour = new Vector4 (0.9176470588f, 0.9176470588f, 0.9176470588f, 1f), Transform = Matrix4.Identity };
-			sentances [1] = new SentanceBlock{ Colour = new Vector4 (1, 0, 0, 1) , Transform = Matrix4.Identity };
-			sentances [2] = new SentanceBlock{ Colour = new Vector4 (0, 1, 0, 1) , Transform = Matrix4.Identity };
-			sentances [3] = new SentanceBlock{ Colour = new Vector4 (0, 0, 1, 1) , Transform = Matrix4.Identity };
-
-			ssbo = new SentanceBlockStorageBuffer (sentances, BufferUsageHint.StaticRead);
-			//	GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
-				//CheckGLError ();
-		//	GL.BindVertexArray(0);
 			CheckGLError ();
 
 			InitialiseUnload ();
@@ -355,79 +307,39 @@ namespace NextFont.ConsoleApplication
 				programID = manager.CreateFragmentProgram (vert, frag, "");
 
 				GL.UseProgram (programID);
-				//GL.BindVertexArray (vbo);
-					vbo.BindManually(programID);
-					pageOne.BindManually (programID);
-/***
-//					var posAttrib = GL.GetAttribLocation (programID, "in_position");
-//					if (posAttrib != -1)
-//					{
-//						CheckGLError ();
-//						GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
-//						CheckGLError ();
-//						GL.VertexAttribPointer (posAttrib, 2, VertexAttribPointerType.Float, false, sizeof(float) * 5, (IntPtr)0);		
-//						CheckGLError ();
-//						GL.EnableVertexAttribArray (posAttrib);
-//						CheckGLError ();
-//					}
-//
-////					var colorAttrib = GL.GetAttribLocation (programID, "in_colour");
-////					if (colorAttrib != -1)
-////					{
-////						CheckGLError ();
-////						GL.BindBuffer (BufferTarget.ArrayBuffer, vertexBuffer);
-////						CheckGLError ();
-////						GL.VertexAttribPointer (colorAttrib, 3, VertexAttribPointerType.Float, false, sizeof(float) * 5, (IntPtr)(sizeof(float) * 2));		
-////						CheckGLError ();
-////						GL.EnableVertexAttribArray (colorAttrib);
-////						CheckGLError ();
-////					}
-//
-//					var drawIDAttrib = GL.GetAttribLocation (programID, "in_drawId");
-//					if (drawIDAttrib != -1)
-//					{
-//						CheckGLError ();
-//						GL.BindBuffer (BufferTarget.ArrayBuffer, drawIDBuffer);
-//						CheckGLError ();
-//						GL.VertexAttribIPointer (drawIDAttrib, 1, VertexAttribIntegerType.UnsignedInt, sizeof(uint), (IntPtr)0);		
-//						CheckGLError ();
-//						GL.VertexAttribDivisor (drawIDAttrib, 1);
-//						CheckGLError ();
-//						GL.EnableVertexAttribArray (colorAttrib);
-//						CheckGLError ();
-//					}
-//
-//					GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
-**/
-
+					mSharedVertexBuffer.BindManually (programID);					
 				GL.BindVertexArray (0);
 				GL.UseProgram (0);
 			}
 		}
 
+		const int MAX_PAGES = 9;
+
 		void InitialiseUnload ()
 		{
 			Unload += (sender, e) =>  {
 				GL.DeleteProgram(programID);
-				GL.DeleteBuffer (elementBuffer);
-				GL.DeleteBuffer (drawIDBuffer);
-				GL.DeleteBuffer (vertexBuffer);
-				vbo.Dispose();
-				ssbo.Dispose();
-				pageOne.Dispose();
+				for (int i = 0; i < MAX_PAGES; ++i)
+				{
+					screenPages[i].Dispose();
+				}
+				leftArrow.Dispose();
+				rightArrow.Dispose();
+				mSharedVertexBuffer.Dispose();
+				mConstantBuffer.Dispose();
 			};
 		}
 
 		public int programID;
 
-		public TextOutput background;
-		public TextOutput pageOne;
-		public TextVertexBuffer vbo;
-		public SentanceBlock[] sentances;
-		public SentanceBlockStorageBuffer ssbo;
-		public int vertexBuffer;
-		public int drawIDBuffer;
-		public int elementBuffer;
+		public Matrix4 mOrthographicMatrix;
+		public SentanceBlockStorageBuffer mConstantBuffer;
+		public TextVertexBuffer mSharedVertexBuffer;
+
+		public TextOutput[] screenPages;
+
+		public TextOutput leftArrow;
+		public TextOutput rightArrow;
 
 		private float[] vertexData = {
 			-1f, -1f, 0,
@@ -469,49 +381,70 @@ namespace NextFont.ConsoleApplication
 			//	QFont.End();
 		}
 
+		void GenerateLeftArrow ()
+		{
+			//	GL.PushMatrix();
+			var offset = new Vector3 (10 + 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
+			var transform = Matrix4.CreateTranslation (offset);
+			controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
+			var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+			controlsText.Print (mvp, "<- Press [Left]", QFontAlignment.Left);
+			//	GL.PopMatrix();
+		}
+
+		void GenerateRightArrow ()
+		{
+			var offset = new Vector3 (Width - 10 - 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
+			var transform = Matrix4.CreateTranslation (offset);
+			controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
+			var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+			controlsText.Print (mvp, "Press [Right] ->", QFontAlignment.Right);
+		}
+
 		void GenerateText ()
 		{
-			var ortho = Matrix4.CreateOrthographicOffCenter (0f, ClientRectangle.Width, ClientRectangle.Height, 0f, -1.0f, 1f);
-
 			switch (currentDemoPage)
 			{
-			case 1:
+			case 0:
 				{
 					float yOffset = 0;
 
 					var offset1 = new Vector3 (Width * 0.5f, yOffset, 0f);
 					var transform1 = Matrix4.CreateTranslation (offset1);
 
-					var mvp = Matrix4.Mult (transform1, ortho);
+					var mvp = Matrix4.Mult (transform1, mOrthographicMatrix);
 					heading1.Print (mvp, "QuickFont", QFontAlignment.Centre);
 					yOffset += heading1.Measure (ClientRectangle, "QuickFont").Height;
 
 					var offset2 = new Vector3 (20f, yOffset, 0f);
 					var transform2 = Matrix4.CreateTranslation (offset2);
 
-					var mvp2 = Matrix4.Mult (transform2, ortho);
+					var mvp2 = Matrix4.Mult (transform2, mOrthographicMatrix);
 					heading2.Print (mvp2, "Introduction", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "Introduction").Height;
 
 //
 					var offset3 = new Vector3 (30f, yOffset + 20, 0f);
 					var transform3 = Matrix4.CreateTranslation (offset3);
-					var mvp3 = Matrix4.Mult (transform3, ortho);
+					var mvp3 = Matrix4.Mult (transform3, mOrthographicMatrix);
 					mainText.SafePrint (mvp3, ClientRectangle, introduction, Width - 60, QFontAlignment.Justify);
 					//GL.PopMatrix();
 					//QFont.End();
 
 				}
 				break;
-			case 2:
+			case 1:
 				{
 					float yOffset = 20;
 					//QFont.Begin();
 					//GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Easy as ABC!", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+
+					heading2.Print (mvp, "Easy as ABC!", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
+
 					//GL.PopMatrix();
 					PrintComment (usingQuickFontIsSuperEasy, ref yOffset);
 					PrintCode (loadingAFont1, ref yOffset);
@@ -524,14 +457,15 @@ namespace NextFont.ConsoleApplication
 					//QFont.End();
 				}
 				break;
-			case 3:
+			case 2:
 				{
 					float yOffset = 20;
 					//QFont.Begin();
 					//GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Alignment", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "Alignment", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
 					//GL.PopMatrix();
 					PrintCommentWithLine (whenPrintingText, QFontAlignment.Left, Width * 0.5f, ref yOffset);
@@ -542,6 +476,36 @@ namespace NextFont.ConsoleApplication
 					//QFont.End();
 				}
 				break;
+			case 3:
+				{
+					float yOffset = 20;
+					//QFont.Begin();
+					//GL.PushMatrix();
+					var offset = new Vector3 (20f, yOffset, 0f);
+					var transform = Matrix4.CreateTranslation (offset);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+
+					heading2.Print (mvp, "Bounds and Justify", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
+					//GL.PopMatrix();
+					//GL.PushMatrix();
+					yOffset += 20;
+					var offset2 = new Vector3 ((int)(Width * 0.5), yOffset, 0f);
+					var transform2 = Matrix4.CreateTranslation (offset2);
+					var mvp2 = Matrix4.Mult (transform2, mOrthographicMatrix);
+					controlsText.Print (mvp2, "Press [Up], [Down] or [Enter]!", QFontAlignment.Centre);
+					yOffset += controlsText.Measure (ClientRectangle, "[]").Height;
+					//GL.PopMatrix();
+					float boundShrink = (int)(350 * (1 - Math.Cos (boundsAnimationCnt * Math.PI * 2)));
+					yOffset += 15;
+
+					PrintWithBounds (mainText, ofCourseItsNot, new RectangleF (30f + boundShrink * 0.5f, yOffset, Width - 60 - boundShrink, 350f), cycleAlignment, ref yOffset);
+					string printWithBounds = "myFont.Print(text,400f,QFontAlignment." + cycleAlignment + ");";
+					yOffset += 15f;
+					PrintCode (printWithBounds, ref yOffset);
+					//QFont.End();
+				}
+				break;
 			case 4:
 				{
 					float yOffset = 20;
@@ -549,23 +513,13 @@ namespace NextFont.ConsoleApplication
 					//GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Bounds and Justify", QFontAlignment.Left);
-					yOffset += heading2.Measure (ClientRectangle, "Easy as ABC!").Height;
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "Your own Texture Fonts", QFontAlignment.Left);
+					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//GL.PopMatrix();
-					//GL.PushMatrix();
-					yOffset += 20;
-					var offset2 = new Vector3 ((int)(Width * 0.5), yOffset, 0f);
-					var transform2 = Matrix4.CreateTranslation (offset2);
-					controlsText.Print (transform2, "Press [Up], [Down] or [Enter]!", QFontAlignment.Centre);
-					yOffset += controlsText.Measure (ClientRectangle, "[]").Height;
-					//GL.PopMatrix();
-					float boundShrink = (int)(350 * (1 - Math.Cos (boundsAnimationCnt * Math.PI * 2)));
-					yOffset += 15;
-					;
-					PrintWithBounds (mainText, ofCourseItsNot, new RectangleF (30f + boundShrink * 0.5f, yOffset, Width - 60 - boundShrink, 350f), cycleAlignment, ref yOffset);
-					string printWithBounds = "myFont.Print(text,400f,QFontAlignment." + cycleAlignment + ");";
-					yOffset += 15f;
-					PrintCode (printWithBounds, ref yOffset);
+					PrintComment (anotherCoolFeature, ref yOffset);
+					PrintCode (textureFontCode1, ref yOffset);
+					PrintComment (thisWillHaveCreated, ref yOffset);
 					//QFont.End();
 				}
 				break;
@@ -576,23 +530,8 @@ namespace NextFont.ConsoleApplication
 					//GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Your own Texture Fonts", QFontAlignment.Left);
-					yOffset += heading2.Measure (ClientRectangle, "T").Height;
-					//GL.PopMatrix();
-					PrintComment (anotherCoolFeature, ref yOffset);
-					PrintCode (textureFontCode1, ref yOffset);
-					PrintComment (thisWillHaveCreated, ref yOffset);
-					//QFont.End();
-				}
-				break;
-			case 6:
-				{
-					float yOffset = 20;
-					//QFont.Begin();
-					//GL.PushMatrix();
-					var offset = new Vector3 (20f, yOffset, 0f);
-					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Your own Texture Fonts", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "Your own Texture Fonts", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//GL.PopMatrix();
 					PrintComment (ifYouDoIntend, ref yOffset);
@@ -602,7 +541,7 @@ namespace NextFont.ConsoleApplication
 					//	QFont.End();
 				}
 				break;
-			case 7:
+			case 6:
 				{
 					float yOffset = 20;
 					//QFont.Begin();
@@ -610,7 +549,8 @@ namespace NextFont.ConsoleApplication
 					//GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Drop Shadows", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "Drop Shadows", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
 					heading2.Options.DropShadowOffset = new Vector2 (0.16f, 0.16f);
@@ -627,7 +567,7 @@ namespace NextFont.ConsoleApplication
 					//	QFont.End();
 				}
 				break;
-			case 8:
+			case 7:
 				{
 					float yOffset = 20;
 					//	QFont.Begin();
@@ -635,7 +575,8 @@ namespace NextFont.ConsoleApplication
 					//	GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "Monospaced Fonts", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "Monospaced Fonts", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
 					WriteComment (monoSpaced, hereIsSomeMono, QFontAlignment.Left, ref yOffset);
@@ -653,14 +594,15 @@ namespace NextFont.ConsoleApplication
 					//	QFont.End();
 				}
 				break;
-			case 9:
+			case 8:
 				{
 					float yOffset = 20;
 					//	QFont.Begin();
 					//	GL.PushMatrix();
 					var offset = new Vector3 (20f, yOffset, 0f);
 					var transform = Matrix4.CreateTranslation (offset);
-					heading2.Print (transform, "In Conclusion", QFontAlignment.Left);
+					var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+					heading2.Print (mvp, "In Conclusion", QFontAlignment.Left);
 					yOffset += heading2.Measure (ClientRectangle, "T").Height;
 					//	GL.PopMatrix();
 					PrintComment (thereAreActually, ref yOffset);
@@ -668,29 +610,18 @@ namespace NextFont.ConsoleApplication
 				}
 				break;
 			}
-			//	QFont.Begin();
-			if (currentDemoPage != LAST_PAGE)
-			{
-				//	GL.PushMatrix();
-				var offset = new Vector3 (Width - 10 - 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
-				var transform = Matrix4.CreateTranslation (offset);
-				controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
-
-				var mvp = Matrix4.Mult (transform, ortho);
-				controlsText.Print (mvp, "Press [Right] ->", QFontAlignment.Right);
-				//	GL.PopMatrix();
-			}
-			if (currentDemoPage != 1)
-			{
-				//	GL.PushMatrix();
-				var offset = new Vector3 (10 + 16 * (float)(1 + Math.Sin (cnt * 4)), Height - controlsText.Measure (ClientRectangle, "P").Height - 10f, 0f);
-				var transform = Matrix4.CreateTranslation (offset);
-				controlsText.Options.Colour = new Color4 (0.8f, 0.1f, 0.1f, 1.0f);
-
-				var mvp = Matrix4.Mult (transform, ortho);
-				controlsText.Print (mvp, "<- Press [Left]", QFontAlignment.Left);
-				//	GL.PopMatrix();
-			}
+//			//	QFont.Begin();
+//			if (currentDemoPage != LAST_PAGE)
+//			{
+//				//	GL.PushMatrix();
+//				GenerateRightArrow ();
+//
+//				//	GL.PopMatrix();
+//			}
+//			if (currentDemoPage != 1)
+//			{
+//				GenerateLeftArrow ();
+//			}
 		}
 
 		protected override void OnRenderFrame(FrameEventArgs e)
@@ -723,52 +654,35 @@ namespace NextFont.ConsoleApplication
 			commands [0].BaseVertex = 0;
 			// IMPORTANT - controls material index
 			commands [0].BaseInstance = 0;
-//
-//			GL.UseProgram(programID);
-//			CheckGLError ();
-//
-////			GL.BindVertexArray (0);
-	  		//vbo.Bind();
-//			ssbo.Bind ();
-			//GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
-//			CheckGLError ();
-//			GL.BindBuffer (BufferTarget.ElementArrayBuffer, elementBuffer);
-//			CheckGLError ();
+
 			if (useShader)
 			{
 				GL.UseProgram (programID);
 			}
 
-//			GL.MultiDrawElementsIndirect<DrawElementsIndirectCommand>(
-//				All.Triangles,
-//				All.UnsignedInt,
-//				commands,
-//				commands.Length,
-//				stride);
-////
-
-//			GL.DrawArrays(PrimitiveType.Triangles, 
-//				0,
-//				2);
-		//	GL.UseProgram(programID);
-	//		vbo.Unbind();
-//			ssbo.Unbind ();
-
 			GL.Enable (EnableCap.Blend);
 			GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
 
-			pageOne.Bind ();
-			pageOne.Render ();
-			pageOne.Unbind ();
+			mSharedVertexBuffer.Bind ();
+			mConstantBuffer.Bind ();
+
+			screenPages [currentDemoPage].Render ();
+
+			if (currentDemoPage != LAST_PAGE)
+			{
+				rightArrow.Render ();
+			}
+			if (currentDemoPage != FIRST_PAGE)
+			{
+				leftArrow.Render ();
+			}
+
+			mSharedVertexBuffer.Unbind ();
+			mConstantBuffer.Unbind ();
 
 			GL.Disable (EnableCap.Blend);
 
-			//GL.DrawElements(PrimitiveType.Triangles, elementData.Length, DrawElementsType.UnsignedInt, 0);
 			GL.UseProgram(0);
-			//CheckGLError ();
-			//GL.BindBuffer (BufferTarget.ElementArrayBuffer, 0);
-			//GL.BindVertexArray (0);
-			//GL.UseProgram(0);
 
 			SwapBuffers();
 		}
@@ -808,7 +722,10 @@ namespace NextFont.ConsoleApplication
 				yOffset += 20;
 				var offset = new Vector3(30f, yOffset, 0f);
 				var transform = Matrix4.CreateTranslation(offset);
-				font.SafePrint(transform, ClientRectangle, comment, Width - 60, alignment);
+
+				var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+
+				font.SafePrint(mvp, ClientRectangle, comment, Width - 60, alignment);
 				yOffset += font.SafeMeasure(ClientRectangle, comment, Width - 60, alignment).Height;
 			//GL.PopMatrix();
 		}
@@ -819,7 +736,8 @@ namespace NextFont.ConsoleApplication
 				yOffset += 20;
 				var offset = new Vector3(50f, yOffset, 0f);
 				var transform = Matrix4.CreateTranslation(offset);
-				codeText.SafePrint(transform, ClientRectangle, code, Width - 50, QFontAlignment.Left);
+				var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+				codeText.SafePrint(mvp, ClientRectangle, code, Width - 50, QFontAlignment.Left);
 				yOffset += codeText.SafeMeasure(ClientRectangle, code, Width - 50, QFontAlignment.Left).Height;
 			//GL.PopMatrix();
 		}
@@ -835,7 +753,8 @@ namespace NextFont.ConsoleApplication
 				yOffset += 20;
 				var offset = new Vector3((int)xOffset, yOffset, 0f);
 				var transform = Matrix4.CreateTranslation(offset);
-				font.Print(transform, comment, alignment);
+				var mvp = Matrix4.Mult (transform, mOrthographicMatrix);
+				font.Print(mvp, comment, alignment);
 				var bounds = font.SafeMeasure(ClientRectangle, comment, Width-60, alignment);
 
 //				GL.Disable(EnableCap.Texture2D);

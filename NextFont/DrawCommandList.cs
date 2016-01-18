@@ -13,6 +13,7 @@ namespace NextFont
 		private readonly List<uint> mIndices;
 		private readonly List<uint> mDrawIDs;
 
+		private uint mBaseInstance;
 		private uint mTotalVertices;
 		public DrawCommandList ()
 		{
@@ -21,6 +22,7 @@ namespace NextFont
 			mVertexData = new List<float> ();
 			mIndices = new List<uint> ();
 			mDrawIDs = new List<uint> ();
+			mBaseInstance = 0;
 		}
 
 		public void Clear()
@@ -30,6 +32,12 @@ namespace NextFont
 			mIndices.Clear ();
 			mDrawIDs.Clear ();
 			mTotalVertices = 0;
+		}
+
+		public void ClearCommandsOnly()
+		{
+			mDrawCommands.Clear ();
+			//mDrawIDs.Clear ();
 		}
 
 		void AddDrawCommand (IList<uint> indicesChunk, uint firstIndex, uint baseVertex, uint currentBlock)
@@ -64,12 +72,12 @@ namespace NextFont
 			mIndices.AddRange (indicesChunk);
 		}
 
-		void AddDrawIDs (uint currentBlock, int triCount)
+		void AddDrawIDs (uint currentBlock)
 		{
 			mDrawIDs.Add (currentBlock);
 		}
 
-		public void RenderChunk(TextureHandle handle, Vector4 fontColor, Matrix4 transform, uint noOfVertices, List<float> vertexChunk, List<uint> indicesChunk)
+		public void RenderChunk (TextureHandle handle, Vector4 fontColor, Matrix4 transform, uint noOfVertices, List<float> vertexChunk, List<uint> indicesChunk)
 		{
 			uint firstIndex = (uint)mIndices.Count;
 			uint baseVertex = mTotalVertices;
@@ -78,10 +86,57 @@ namespace NextFont
 			AddVertices (vertexChunk);
 			AddIndices (indicesChunk);
 
-			AddDrawIDs (currentBlock, indicesChunk.Count / 3);
+			AddDrawIDs (currentBlock);
 			AddSentanceBlock (handle, fontColor, transform);
 			AddDrawCommand (indicesChunk, firstIndex, baseVertex, currentBlock);
 			mTotalVertices += noOfVertices;
+		}
+
+		static TextVertexBuffer PopulateBuffers (int vertexBuffer, int drawIDBuffer, int elementBuffer)
+		{
+			const int POSITION = 0;
+			const int IN_TEXTURE = 1;
+			const int DRAW_ID = 2;
+			int offset = 0;
+			/// VERTEX
+			//vbo = GL.GenVertexArray();
+			//GL.BindVertexArray (vbo);
+			//CheckGLError ();
+			int elementCount = 3;
+			int size = elementCount * sizeof(float);
+			int location = POSITION;
+
+			var vbo = new TextVertexBuffer ();
+			vbo.in_position.Buffer = vertexBuffer;
+			vbo.in_position.Location = location;
+			vbo.in_position.Elements = elementCount;
+			vbo.in_position.Offset = (IntPtr)offset;
+			offset += size;
+			elementCount = 2;
+			size = elementCount * sizeof(float);
+			location = IN_TEXTURE;
+			vbo.in_texCoords.Buffer = vertexBuffer;
+			vbo.in_texCoords.Location = location;
+			vbo.in_texCoords.Elements = elementCount;
+			vbo.in_texCoords.Offset = (IntPtr)offset;
+			// SHARED BUFFER AT END
+			offset += size;
+			int stride = offset;
+			vbo.in_position.Stride = stride;
+			vbo.in_texCoords.Stride = stride;
+			offset = 0;
+			stride = sizeof(uint);
+			elementCount = 1;
+			size = elementCount * sizeof(uint);
+			location = DRAW_ID;
+			vbo.in_drawID.Buffer = drawIDBuffer;
+			vbo.in_drawID.Location = location;
+			vbo.in_drawID.Elements = elementCount;
+			vbo.in_drawID.Stride = stride;
+			vbo.in_drawID.Offset = (IntPtr)offset;
+			vbo.in_drawID.Divisor = 1;
+			vbo.Initialise (elementBuffer);
+			return vbo;
 		}
 
 		public TextVertexBuffer AsStaticText ()
@@ -104,63 +159,20 @@ namespace NextFont
 			GL.BufferData<uint> (BufferTarget.ElementArrayBuffer, (IntPtr)(sizeof(uint) * elementData.Length), elementData, BufferUsageHint.StaticDraw);
 			GL.BindBuffer (BufferTarget.ElementArrayBuffer, 0);
 
-			const int POSITION = 0;
-			const int IN_TEXTURE = 1;
-			const int DRAW_ID = 2;
-
-			int offset = 0;
-			/// VERTEX
-			//vbo = GL.GenVertexArray();
-			//GL.BindVertexArray (vbo);
-			//CheckGLError ();
-
-			int elementCount = 3;
-			int size = elementCount * sizeof(float);
-			int location = POSITION;
-
-			var vbo = new TextVertexBuffer ();
-			vbo.in_position.Buffer = vertexBuffer;
-			vbo.in_position.Location = location;
-			vbo.in_position.Elements =	elementCount;
-			vbo.in_position.Offset = (IntPtr)offset;
-
-			offset += size;
-			elementCount = 2;
-			size = elementCount * sizeof(float);
-			location = IN_TEXTURE;
-
-			vbo.in_texCoords.Buffer = vertexBuffer;
-			vbo.in_texCoords.Location = location;
-			vbo.in_texCoords.Elements =	elementCount;
-			vbo.in_texCoords.Offset = (IntPtr)offset;
-
-			// SHARED BUFFER AT END
-			offset += size;
-			int stride = offset;
-			vbo.in_position.Stride = stride;
-			vbo.in_texCoords.Stride = stride;
-
-			offset = 0;
-			stride = sizeof(uint);
-			elementCount = 1;
-			size = elementCount * sizeof(uint);
-			location = DRAW_ID;
-
-			vbo.in_drawID.Buffer = drawIDBuffer;
-			vbo.in_drawID.Location = location;
-			vbo.in_drawID.Elements = elementCount;
-			vbo.in_drawID.Stride = stride;
-			vbo.in_drawID.Offset = (IntPtr)offset;
-			vbo.in_drawID.Divisor = 3;
-
-			vbo.Initialise (elementBuffer);
-
-			return vbo;
+			return PopulateBuffers (vertexBuffer, drawIDBuffer, elementBuffer);
 		}
 
 		public DrawElementsIndirectCommand[] GetCommands ()
 		{
 			return mDrawCommands.ToArray ();
+//
+//			for (int i = 0; i < result.Length; ++i)
+//			{
+//				result[i].BaseInstance = mBaseInstance;
+//			}
+//			mBaseInstance = (uint)mDrawIDs.Count;
+//
+//			return result;
 		}
 	}
 }

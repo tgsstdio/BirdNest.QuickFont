@@ -112,6 +112,10 @@ namespace NextFont
 		public void Reset ()
 		{
 			mCharacters.Clear ();
+			foreach (var dest in mDestinations)
+			{
+				dest.Reset ();
+			}
 		}
 
 		void ShaderlessTransform (ref Vector3 v0, ref Vector3 v1, ref Vector3 v2, ref Vector3 v3)

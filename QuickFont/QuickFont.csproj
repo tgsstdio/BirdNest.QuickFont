@@ -11,6 +11,7 @@
     <RootNamespace>QuickFont</RootNamespace>
     <AssemblyName>QuickFont</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <ReleaseVersion>0.2</ReleaseVersion>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

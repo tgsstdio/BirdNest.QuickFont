@@ -62,14 +62,14 @@ namespace NextFont
 
 		void ReleaseUnmanagedResources()
 		{
-			TextBuffer.Dispose ();
-			DrawCommands = null;
-			Storage.Dispose ();
+
 		}
 
 		void ReleaseManagedResources()
 		{
-
+			TextBuffer = null;
+			DrawCommands = null;
+			Storage = null;
 		}
 
 		private bool mDisposed = false;

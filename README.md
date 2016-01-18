@@ -1,8 +1,8 @@
 # BirdNest.QuickFont
 
-*[AZDO]: Approaching Zero Driver Offset
-*[VBOs]: Vertex Buffer Objects
-*[SSBO]: Shader Storage Buffer Objects
+ * [AZDO]: Approaching Zero Driver Overhead
+ * [VBOs]: Vertex Buffer Objects
+ * [SSBO]: Shader Storage Buffer Objects
 
 Attempt to use OpenTK font rendering with AZDO techniques
  - Using forks of QuickFonts as a basis
@@ -15,21 +15,27 @@ Attempt to use OpenTK font rendering with AZDO techniques
  - VBOs 
  - GLSL shaders
  - Multi indirect draw  
- - dynamic data updates with fences
  - upfront SSBO buffer initialisation to minimise OpenGL calls during update
  - (FUTURE) signed distance fonts
 
+## Version 0.2
+- All pages are rendered.
+- Transforms used with print MUST uses a matrix made up of modelview and projection/orthogonal matrices
+- TODO 
+    - Moving text such as arrows
+    - Moving alignment (i.e. Bounds and Justify)	
 ## Version 0.1
 - Added working example of Quickfont library using .NET 4.5 
+    - Incomplete example (Only page one is displayed & next page does not move)
     - Library (QuickFont.proj)
     - OpenTK application (Example.proj)
-- Initial commit of ADZO version
+- Initial commit of AZDO version
     - Library (NextFont.proj)
     - OpenTK application (NextFont.ConsoleApplication.proj)
     - C#/OpenTK translation of [apitest](https://github.com/nvMcJohn/apitest) (DynamicStreaming.proj)
 
 # MIT LICENSE
-Copyright (c) 2015 David Young
+Copyright (c) 2015, 2016 David Young
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
